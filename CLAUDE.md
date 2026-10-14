@@ -1,46 +1,42 @@
-# HEPHAEST — consignes pour Claude Code
+# HEPHAEST
 
-Application web de musculation et de coaching. Cahier des charges : `docs/` (à venir) et Jira.
+Application web de musculation, de suivi de progression et de coaching. Slogan : « Forge ta progression. »
+Projet personnel, budget zéro, conçu pour pouvoir grandir.
 
-## Jira
+## Au démarrage de chaque session
 
-- Site : `hepheast.atlassian.net`, projet **SCRUM** (« Hepheast - Dashbord sportif »)
-- Hiérarchie : Epic → Story / Tâche → Subtask. Les sous-tâches sont l'unité de travail.
-- Statuts : « À faire » → « En cours » → « Terminé » (« En cours de revue » si un point reste à valider).
+1. Lire `docs/progress.md` : ce qui est fait, la prochaine étape, les points ouverts.
+2. `git log --oneline -15` pour voir les derniers commits.
+3. Vérifier dans Jira (projet **SCRUM**) le statut des tickets de l'étape en cours.
+4. Présenter le plan du prochain ticket avant de coder.
 
-### Workflow ticket par ticket
+## Documentation (à lire selon le besoin, pas en entier)
 
-1. Choisir la prochaine sous-tâche « À faire » de l'Epic en cours, par priorité.
-2. La passer « En cours » (et son parent s'il est encore « À faire »).
-3. Implémenter uniquement ce que décrit le ticket.
-4. Vérifier : `pnpm test`, `pnpm type-check`, `pnpm lint:check`. Tout doit passer.
-5. Un commit par sous-tâche (plusieurs si le travail se découpe naturellement).
-6. Passer la sous-tâche « Terminé ». Si une partie manque (ex. backend Supabase pas prêt),
-   la laisser « En cours » et ajouter un commentaire qui dit ce qui reste.
-7. Quand toutes les sous-tâches d'un parent sont terminées, passer le parent « Terminé ».
+- `docs/cahier-des-charges.md` : vision, règles métier, critères d'acceptation AC-01 à AC-12,
+  modèle de données. Consulter la section concernée avant d'implémenter un ticket.
+- `docs/decisions.md` : arbitrages déjà tranchés. **Prioritaire sur le cahier des charges**
+  en cas de contradiction.
+- `docs/progress.md` : état d'avancement, à mettre à jour en fin de session.
 
-## Commits
+Les règles détaillées sont dans `.claude/rules/` (workflow Jira, commits, Vue, CSS, données, tests).
 
-- [Conventional Commits](https://www.conventionalcommits.org/), **en-tête seul, sans corps**.
-- Format : `type(scope): description en anglais à l'impératif (SCRUM-XX)`
-- Exemple : `feat(training): add rest timer with auto start (SCRUM-142)`
-- Types : `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `style`, `perf`, `build`, `ci`.
-- commitlint et lint-staged s'exécutent via husky ; ne jamais les contourner (`--no-verify`).
+## Stack
 
-## Stack et conventions
+pnpm · Vite · Vue 3 (`<script setup lang="ts">`) · TypeScript strict · Pinia · Vue Router ·
+Zod · CSS classique (pas de Tailwind) · `@lucide/vue` · Vitest · Supabase prévu (pas encore branché).
 
-- pnpm, Vite, Vue 3 (`<script setup lang="ts">` uniquement), TypeScript strict, Pinia, Vue Router.
-- **CSS classique, pas de Tailwind.** Styles en `<style scoped>`, classes BEM
-  (`bloc__element--modif`), toutes les valeurs passent par `src/styles/tokens.css`.
-  Stylelint refuse les couleurs en dur.
-- Icônes : `@lucide/vue`. Police : Archivo variable auto-hébergée.
-- Accès aux données uniquement via `src/services` (contrats dans `contracts.ts`).
-  L'adaptateur local actuel sera remplacé par Supabase sans toucher à l'UI.
-- Pas de logique métier dans les composants de présentation : stores ou modules du domaine.
-- Validation de formulaires avec Zod (`src/services/validation.ts`).
-- Accessibilité WCAG 2.2 AA : libellés explicites, focus visible, cibles tactiles ≥ 48 px,
-  jamais d'information par la couleur seule, `prefers-reduced-motion` respecté.
-- Textes de l'interface en français, tutoiement.
+## Structure
+
+```
+src/
+  app/          # App.vue, router, layouts, navigation
+  components/   # composants partagés (ui/ = design system)
+  domains/      # auth, training, exercises, programs, progress, calendar, coaching, admin
+  services/     # contrats d'accès aux données + adaptateurs (local/ pour l'instant)
+  stores/       # stores Pinia transverses (session, toasts)
+  styles/       # tokens.css, base.css, typography.css
+  types/        # modèle de domaine partagé
+```
 
 ## Commandes
 
@@ -52,3 +48,10 @@ Application web de musculation et de coaching. Cahier des charges : `docs/` (à 
 | `pnpm lint:check`    | Oxlint + ESLint + Stylelint sans correction  |
 | `pnpm build`         | Types puis build de production               |
 | `pnpm build:preview` | Build statique avec routage en hash (aperçu) |
+
+Avant chaque commit : `pnpm test`, `pnpm type-check` et `pnpm lint:check` doivent passer.
+
+## Langue
+
+Interface et documentation en français, tutoiement dans l'UI. Code, noms de variables et
+messages de commit en anglais.
