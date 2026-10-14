@@ -1,6 +1,17 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
+
+import AppLayout from './layouts/AppLayout.vue'
+import AuthLayout from './layouts/AuthLayout.vue'
+
+const route = useRoute()
+
+const layout = computed(() => (route.meta.layout === 'auth' ? AuthLayout : AppLayout))
+</script>
+
 <template>
-  <main>
-    <h1>HEPHAEST</h1>
-    <p>Forge ta progression.</p>
-  </main>
+  <component :is="layout">
+    <RouterView />
+  </component>
 </template>
