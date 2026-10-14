@@ -1,10 +1,12 @@
 import type {
+  DayKey,
   Equipment,
   Exercise,
   Id,
   LastPerformance,
   MovementType,
   MuscleGroup,
+  ScheduledWorkout,
   UserPreferences,
   UserProfile,
   WorkoutSession,
@@ -63,8 +65,23 @@ export interface WorkoutService {
   getLastPerformance(exerciseId: Id): Promise<LastPerformance | null>
 }
 
+/** Planification des séances à venir (CDC §4.5) */
+export interface ScheduleService {
+  /** Séances planifiées entre deux jours inclus */
+  listScheduled(range: { from: DayKey; to: DayKey }): Promise<ScheduledWorkout[]>
+  /** Prochaine séance planifiée à partir de ce jour, celle du jour comprise */
+  getNextScheduled(from: DayKey): Promise<ScheduledWorkout | null>
+  createScheduled(input: { date: DayKey; title: string; programId?: Id }): Promise<ScheduledWorkout>
+  /** Déplacement : le jour d'origine est conservé pour l'affichage */
+  moveScheduled(id: Id, date: DayKey): Promise<ScheduledWorkout>
+  cancelScheduled(id: Id): Promise<void>
+  /** Rattache la séance réalisée qui honore le créneau */
+  linkSession(id: Id, sessionId: Id): Promise<ScheduledWorkout>
+}
+
 export interface Services {
   auth: AuthService
   exercises: ExerciseCatalogService
   workouts: WorkoutService
+  schedule: ScheduleService
 }

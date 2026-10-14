@@ -23,6 +23,8 @@ const props = withDefaults(
     selectLabel?: string
     /** Place le curseur dans la recherche dès l'affichage (sélecteur en surcouche) */
     autofocus?: boolean
+    /** Ouvre la recherche avec le filtre favoris déjà actif (raccourci du tableau de bord) */
+    startWithFavorites?: boolean
   }>(),
   { mode: 'link', selectLabel: 'Ajouter' },
 )
@@ -34,7 +36,7 @@ const catalog = useCatalogStore()
 const query = ref('')
 const muscleId = ref('')
 const equipmentId = ref('')
-const favoritesOnly = ref(false)
+const favoritesOnly = ref(props.startWithFavorites === true)
 
 const results = ref<Exercise[]>([])
 const status = ref<'loading' | 'ready' | 'error'>('loading')

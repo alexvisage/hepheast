@@ -1,5 +1,13 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
 import ExerciseSearch from '../components/ExerciseSearch.vue'
+
+const route = useRoute()
+
+/** `/exercices?favoris=1` ouvre directement la liste filtrée (raccourci du tableau de bord) */
+const startWithFavorites = computed(() => route.query.favoris === '1')
 </script>
 
 <template>
@@ -8,7 +16,7 @@ import ExerciseSearch from '../components/ExerciseSearch.vue'
       <h1>Exercices</h1>
       <p class="text-muted">Le catalogue, ses consignes et tes performances par mouvement.</p>
     </header>
-    <ExerciseSearch />
+    <ExerciseSearch :start-with-favorites="startWithFavorites" />
   </div>
 </template>
 

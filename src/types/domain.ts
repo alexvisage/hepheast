@@ -59,6 +59,29 @@ export interface WorkoutExercise {
 
 export type WorkoutStatus = 'active' | 'paused' | 'completed' | 'abandoned'
 
+/** Jour au format `YYYY-MM-DD`, exprimé dans le fuseau de l'utilisateur */
+export type DayKey = string
+
+/**
+ * Séance planifiée au calendrier (CDC §11, ScheduledWorkout).
+ * « Manquée » n'est pas stocké : il se déduit d'une date passée sans séance liée.
+ */
+export type ScheduledStatus = 'planned' | 'done' | 'moved'
+
+export interface ScheduledWorkout {
+  id: Id
+  userId: Id
+  date: DayKey
+  title: string
+  status: ScheduledStatus
+  programId?: Id
+  /** Séance réalisée qui l'honore */
+  sessionId?: Id
+  /** Jour d'origine quand la séance a été déplacée */
+  movedFrom?: DayKey
+  note?: string
+}
+
 export interface WorkoutSession {
   id: Id
   userId: Id
