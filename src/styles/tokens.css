@@ -58,6 +58,7 @@
   --color-danger: var(--ember-400);
   --color-danger-soft: var(--ember-900);
   --color-focus: var(--copper-300);
+  --color-backdrop: rgb(10 11 13 / 72%);
 
   /* Typographie — une seule famille, la largeur porte la personnalité :
      étirée pour les titres, condensée pour les grands chiffres de performance */
