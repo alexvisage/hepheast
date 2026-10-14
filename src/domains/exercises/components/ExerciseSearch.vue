@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { ChevronRight, Plus, Search } from '@lucide/vue'
+import { ChevronRight, Plus, Search, Star } from '@lucide/vue'
 
 import StateView from '@/components/ui/StateView.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -8,6 +8,8 @@ import { services, type ExerciseFilters } from '@/services'
 import type { Exercise } from '@/types/domain'
 
 import { useCatalogStore } from '../catalogStore'
+
+import FavoriteToggle from './FavoriteToggle.vue'
 
 /**
  * Recherche et filtres du catalogue, partagés entre la page Exercices
@@ -22,6 +24,7 @@ const catalog = useCatalogStore()
 const query = ref('')
 const muscleId = ref('')
 const equipmentId = ref('')
+const favoritesOnly = ref(false)
 
 const results = ref<Exercise[]>([])
 const status = ref<'loading' | 'ready' | 'error'>('loading')
@@ -36,6 +39,7 @@ async function search() {
     query: query.value || undefined,
     muscleId: muscleId.value || undefined,
     equipmentId: equipmentId.value || undefined,
+    favoritesOnly: favoritesOnly.value || undefined,
   }
   try {
     const found = await services.exercises.listExercises(filters)
@@ -51,13 +55,14 @@ function resetFilters() {
   query.value = ''
   muscleId.value = ''
   equipmentId.value = ''
+  favoritesOnly.value = false
 }
 
 watch(query, () => {
   clearTimeout(debounce)
   debounce = setTimeout(search, 200)
 })
-watch([muscleId, equipmentId], search)
+watch([muscleId, equipmentId, favoritesOnly], search)
 
 onMounted(async () => {
   await catalog.load()
@@ -99,6 +104,16 @@ onMounted(async () => {
           </select>
         </label>
       </div>
+      <button
+        type="button"
+        class="chip"
+        :class="{ 'chip--active': favoritesOnly }"
+        :aria-pressed="favoritesOnly"
+        @click="favoritesOnly = !favoritesOnly"
+      >
+        <Star :size="16" :fill="favoritesOnly ? 'currentColor' : 'none'" aria-hidden="true" />
+        Favoris uniquement
+      </button>
     </div>
 
     <p class="exercise-search__count text-muted" aria-live="polite">
@@ -125,7 +140,7 @@ onMounted(async () => {
     </StateView>
 
     <ul v-else class="exercise-list" role="list" :aria-busy="status === 'loading'">
-      <li v-for="exercise in results" :key="exercise.id">
+      <li v-for="exercise in results" :key="exercise.id" class="exercise-list__item">
         <RouterLink
           v-if="mode === 'link'"
           :to="{ name: 'exercise-detail', params: { id: exercise.id } }"
@@ -145,6 +160,7 @@ onMounted(async () => {
           <Plus class="exercise-row__icon" :size="20" aria-hidden="true" />
           <span class="visually-hidden">Ajouter à la séance</span>
         </button>
+        <FavoriteToggle :exercise="exercise" class="exercise-list__favorite" />
       </li>
     </ul>
   </div>
@@ -222,15 +238,46 @@ onMounted(async () => {
   opacity: 0.6;
 }
 
-.exercise-list > li + li {
+.exercise-list__item {
+  display: flex;
+  align-items: center;
+}
+
+.exercise-list__item + .exercise-list__item {
   border-top: 1px solid var(--color-border);
+}
+
+.exercise-list__favorite {
+  margin-right: var(--space-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  padding: 0 var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  background-color: transparent;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+}
+
+.chip--active {
+  color: var(--color-warning);
+  background-color: var(--color-warning-soft);
+  border-color: var(--color-warning);
 }
 
 .exercise-row {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   min-height: 4rem;
   padding: var(--space-3) var(--space-4);
   color: inherit;
