@@ -8,6 +8,7 @@ import { formatSet } from '@/services/format'
 import type { SetEntry, WorkoutExercise } from '@/types/domain'
 
 import { useActiveSessionStore } from '../activeSessionStore'
+import { useRestTimerStore } from '../restTimerStore'
 
 import SetRow from './SetRow.vue'
 
@@ -19,6 +20,7 @@ import SetRow from './SetRow.vue'
 const props = defineProps<{ entry: WorkoutExercise }>()
 
 const active = useActiveSessionStore()
+const rest = useRestTimerStore()
 
 const confirming = ref(false)
 const pending = ref<SetEntry | null>(null)
@@ -31,6 +33,11 @@ const removalWarning = computed(() => {
 
 function update(set: SetEntry, patch: Partial<SetEntry>) {
   active.updateSet(props.entry.id, set.id, patch)
+}
+
+/** Valider une série lance le repos, si la préférence le permet (SCRUM-142) */
+function validate(set: SetEntry) {
+  if (active.toggleSetDone(props.entry.id, set.id)) rest.startIfAuto()
 }
 
 function toggleSkipped(set: SetEntry) {
@@ -66,7 +73,7 @@ function confirmRemoval() {
           :can-copy-previous="index > 0"
           @update="update(set, $event)"
           @copy-previous="active.copyPreviousSet(entry.id, set.id)"
-          @toggle-done="active.toggleSetDone(entry.id, set.id)"
+          @toggle-done="validate(set)"
           @toggle-skipped="toggleSkipped(set)"
           @remove="requestRemoval(set)"
         />

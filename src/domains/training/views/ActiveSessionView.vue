@@ -12,6 +12,7 @@ import { useToastStore } from '@/stores/toasts'
 import type { Exercise } from '@/types/domain'
 
 import { useActiveSessionStore } from '../activeSessionStore'
+import RestTimer from '../components/RestTimer.vue'
 import SessionExerciseList from '../components/SessionExerciseList.vue'
 
 /**
@@ -109,6 +110,8 @@ async function abandon() {
           Ajouter un exercice
         </BaseButton>
       </template>
+
+      <RestTimer />
 
       <footer class="session__footer">
         <BaseButton size="lg" block :loading="finishing" @click="finish">
