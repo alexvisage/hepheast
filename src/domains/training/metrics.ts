@@ -1,4 +1,4 @@
-import type { SetEntry, WeightUnit, WorkoutSession } from '@/types/domain'
+import type { SetEntry, WeightUnit, WorkoutExercise, WorkoutSession } from '@/types/domain'
 
 /**
  * Calculs de séance (CDC §5.2).
@@ -31,13 +31,26 @@ export function setVolumeKg(set: SetEntry): number {
   return toKg(set.load ?? 0, set.unit) * (set.reps ?? 0)
 }
 
-export interface SessionSummary {
-  exerciseCount: number
+export interface ExerciseSummary {
   completedSets: number
   totalReps: number
   /** Volume arrondi au kilogramme près */
   volumeKg: number
+}
+
+export interface SessionSummary extends ExerciseSummary {
+  exerciseCount: number
   durationSeconds: number
+}
+
+/** Détail d'un exercice dans le récapitulatif de séance (CDC §4.2) */
+export function summarizeExercise(exercise: WorkoutExercise): ExerciseSummary {
+  const doneSets = exercise.sets.filter((set) => set.status === 'done')
+  return {
+    completedSets: doneSets.length,
+    totalReps: doneSets.reduce((sum, set) => sum + (set.reps ?? 0), 0),
+    volumeKg: Math.round(doneSets.reduce((sum, set) => sum + setVolumeKg(set), 0)),
+  }
 }
 
 export function summarizeSession(session: WorkoutSession, now = new Date()): SessionSummary {

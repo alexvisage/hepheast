@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { SetEntry, WorkoutSession } from '@/types/domain'
 
-import { countsTowardVolume, setVolumeKg, summarizeSession } from '../metrics'
+import { countsTowardVolume, setVolumeKg, summarizeExercise, summarizeSession } from '../metrics'
 
 function set(overrides: Partial<SetEntry>): SetEntry {
   return {
@@ -68,6 +68,22 @@ describe('summarizeSession', () => {
       totalReps: 38,
       volumeKg: 1280,
       durationSeconds: 3900,
+    })
+  })
+
+  it('résume un exercice seul, échauffement exclu du volume', () => {
+    expect(summarizeExercise(session.exercises[0]!)).toEqual({
+      completedSets: 3,
+      totalReps: 26,
+      volumeKg: 1280,
+    })
+  })
+
+  it('ne compte rien pour un exercice sans série validée', () => {
+    expect(summarizeExercise(session.exercises[2]!)).toEqual({
+      completedSets: 0,
+      totalReps: 0,
+      volumeKg: 0,
     })
   })
 })

@@ -32,6 +32,12 @@ export const routes: RouteRecordRaw[] = [
     meta: { title: 'Séance en cours', focus: true },
   },
   {
+    path: '/entrainement/seance/recapitulatif',
+    name: 'session-summary',
+    component: () => import('@/domains/training/views/SessionSummaryView.vue'),
+    meta: { title: 'Séance terminée' },
+  },
+  {
     path: '/programmes',
     name: 'programs',
     component: () => import('@/domains/programs/views/ProgramsView.vue'),

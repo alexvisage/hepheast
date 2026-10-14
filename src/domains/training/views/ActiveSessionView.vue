@@ -9,11 +9,13 @@ import SyncStatus from '@/components/ui/SyncStatus.vue'
 import ExercisePickerDialog from '@/domains/exercises/components/ExercisePickerDialog.vue'
 import { formatClock } from '@/services/format'
 import { useToastStore } from '@/stores/toasts'
-import type { Exercise } from '@/types/domain'
+import type { Exercise, WorkoutSession } from '@/types/domain'
 
 import { useActiveSessionStore } from '../activeSessionStore'
 import RestTimer from '../components/RestTimer.vue'
 import SessionExerciseList from '../components/SessionExerciseList.vue'
+import SessionFinishDialog from '../components/SessionFinishDialog.vue'
+import { useRestTimerStore } from '../restTimerStore'
 
 /**
  * Écran de séance active : en-tête, chronomètre, état de sauvegarde,
@@ -21,6 +23,7 @@ import SessionExerciseList from '../components/SessionExerciseList.vue'
  * La saisie des séries arrive avec SCRUM-139.
  */
 const active = useActiveSessionStore()
+const rest = useRestTimerStore()
 const toasts = useToastStore()
 const router = useRouter()
 
@@ -28,6 +31,7 @@ const now = ref(Date.now())
 let clock: ReturnType<typeof setInterval> | undefined
 const confirmAbandon = ref(false)
 const picking = ref(false)
+const confirmFinish = ref(false)
 const finishing = ref(false)
 
 const elapsed = computed(() =>
@@ -52,20 +56,23 @@ async function addExercise(exercise: Exercise) {
   }
 }
 
-async function finish() {
+async function finish(details: Pick<WorkoutSession, 'note' | 'feeling'>) {
   finishing.value = true
-  const completed = await active.finish()
-  finishing.value = false
+  const completed = await active.finish(details)
   if (!completed) {
+    finishing.value = false
+    // La séance reste ouverte : la saisie n'est jamais perdue en silence (AC-12)
     toasts.show('La séance n’a pas pu être enregistrée. Ta saisie est conservée.', 'danger')
     return
   }
-  toasts.show('Séance enregistrée', 'success')
-  await router.push({ name: 'training' })
+  confirmFinish.value = false
+  rest.stop()
+  await router.push({ name: 'session-summary' })
 }
 
 async function abandon() {
   await active.abandon()
+  rest.stop()
   toasts.show('Séance abandonnée')
   await router.push({ name: 'training' })
 }
@@ -73,7 +80,8 @@ async function abandon() {
 
 <template>
   <div class="session">
-    <StateView v-if="!active.loaded" kind="loading" />
+    <!-- L'enregistrement garde l'écran en attente : pas d'état vide clignotant -->
+    <StateView v-if="!active.loaded || finishing" kind="loading" />
 
     <StateView
       v-else-if="!active.session"
@@ -114,13 +122,17 @@ async function abandon() {
       <RestTimer />
 
       <footer class="session__footer">
-        <BaseButton size="lg" block :loading="finishing" @click="finish">
-          Terminer la séance
-        </BaseButton>
+        <BaseButton size="lg" block @click="confirmFinish = true">Terminer la séance</BaseButton>
         <BaseButton variant="ghost" block @click="confirmAbandon = true">
           Abandonner la séance
         </BaseButton>
       </footer>
+
+      <SessionFinishDialog
+        v-model:open="confirmFinish"
+        :session="active.session"
+        @confirm="finish"
+      />
 
       <ExercisePickerDialog
         v-model:open="picking"
