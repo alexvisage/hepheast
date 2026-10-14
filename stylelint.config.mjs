@@ -11,6 +11,7 @@ export default {
     // Les couleurs passent par les design tokens définis dans src/styles/tokens.css
     'color-named': 'never',
     'declaration-no-important': true,
+    'import-notation': 'string',
   },
   overrides: [
     {
