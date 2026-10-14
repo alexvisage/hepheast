@@ -84,6 +84,8 @@ export interface UserPreferences {
   weekStartsOn: 1 | 0
   timeZone: string
   defaultRestSeconds: number
+  /** Lancer le repos automatiquement dès qu'une série est validée */
+  autoRest: boolean
 }
 
 /** Dernière performance connue d'un exercice, affichée pendant la saisie */

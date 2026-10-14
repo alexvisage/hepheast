@@ -64,6 +64,7 @@ export function createLocalAuth(): AuthService & { currentUserId(): string | nul
           weekStartsOn: 1,
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           defaultRestSeconds: 120,
+          autoRest: true,
         },
       }
       writeJson(ACCOUNTS_KEY, [...accounts(), { profile, passwordHash: await hash(password) }])
