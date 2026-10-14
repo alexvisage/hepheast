@@ -21,3 +21,33 @@ if (typeof prototype.showModal !== 'function') {
     this.dispatchEvent(new Event('close'))
   }
 }
+
+/**
+ * ECharts mesure le texte des axes avec un canvas 2D, que jsdom n'implémente
+ * pas : sans ce bouchon, chaque graphique monté inonde la sortie de tests.
+ * Seules les méthodes utilisées pour mesurer et dessiner sont fournies.
+ */
+if (typeof HTMLCanvasElement !== 'undefined') {
+  const noop = () => undefined
+  HTMLCanvasElement.prototype.getContext = function getContext(kind: string) {
+    if (kind !== '2d') return null
+    return {
+      measureText: (text: string) => ({ width: text.length * 6 }),
+      fillText: noop,
+      strokeText: noop,
+      save: noop,
+      restore: noop,
+      beginPath: noop,
+      closePath: noop,
+      moveTo: noop,
+      lineTo: noop,
+      stroke: noop,
+      fill: noop,
+      clearRect: noop,
+      setTransform: noop,
+      scale: noop,
+      translate: noop,
+      createLinearGradient: () => ({ addColorStop: noop }),
+    } as unknown as CanvasRenderingContext2D
+  } as typeof HTMLCanvasElement.prototype.getContext
+}

@@ -6,6 +6,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import IconButton from '@/components/ui/IconButton.vue'
+import LineChart from '@/components/charts/LineChart.vue'
 import NumberStepper from '@/components/ui/NumberStepper.vue'
 import StateView from '@/components/ui/StateView.vue'
 import SyncStatus from '@/components/ui/SyncStatus.vue'
@@ -94,6 +95,19 @@ const swatches = [
         <NumberStepper v-model="reps" label="Répétitions" />
         <NumberStepper v-model="load" label="Charge (compact)" unit="kg" :step="2.5" size="sm" />
       </div>
+    </BaseCard>
+
+    <BaseCard title="Graphique">
+      <LineChart
+        :labels="['14 oct.', '18 oct.', '21 oct.', '25 oct.']"
+        :values="[80, 82.5, 85, 85]"
+        unit="kg"
+        series-name="Charge max"
+      />
+      <p class="text-muted">
+        Rendu SVG, couleurs issues des tokens. Un tableau équivalent accompagne toujours un
+        graphique : lui seul est lisible au lecteur d'écran.
+      </p>
     </BaseCard>
 
     <BaseCard title="Retours">
