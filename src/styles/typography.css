@@ -1,0 +1,73 @@
+/*
+ * Typographie de base.
+ * Titres étirés et denses, texte courant à largeur normale,
+ * chiffres toujours tabulaires pour que les colonnes de charges s'alignent.
+ */
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-body);
+  font-variant-numeric: tabular-nums;
+  font-kerning: normal;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-stretch: var(--font-stretch-wide);
+  line-height: var(--line-height-tight);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-black);
+}
+
+h2 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+}
+
+h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+h4 {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+p {
+  margin: 0;
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+
+small {
+  font-size: var(--font-size-sm);
+}
+
+@media (width >= 64rem) {
+  h1 {
+    font-size: var(--font-size-3xl);
+  }
+}
+
+/* Grands chiffres de performance : condensés, très gras, tabulaires */
+.figure {
+  font-stretch: var(--font-stretch-condensed);
+  font-weight: var(--font-weight-black);
+  font-variant-numeric: tabular-nums lining-nums;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
