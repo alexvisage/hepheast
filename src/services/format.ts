@@ -19,12 +19,22 @@ export function formatSet(reps: number | null, load: number | null, unit: Weight
   return load === null ? `${reps} rép.` : `${reps} × ${formatLoad(load, unit)}`
 }
 
-/** « mar. 14 oct. » */
-export function formatShortDate(iso: string): string {
+/** « mar. 14 oct. », dans le fuseau de l'utilisateur quand il est connu */
+export function formatShortDate(iso: string, timeZone?: string): string {
   return new Intl.DateTimeFormat(LOCALE, {
+    timeZone,
     weekday: 'short',
     day: 'numeric',
     month: 'short',
+  }).format(new Date(iso))
+}
+
+/** « 18:30 » dans le fuseau de l'utilisateur */
+export function formatTime(iso: string, timeZone?: string): string {
+  return new Intl.DateTimeFormat(LOCALE, {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
   }).format(new Date(iso))
 }
 
