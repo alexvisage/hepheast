@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 
 import { authGuard } from './guards'
 import { routes } from './routes'
@@ -21,7 +21,11 @@ declare module 'vue-router' {
 export const APP_NAME = 'HEPHAEST'
 
 export const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  // Le mode hash sert aux aperçus statiques hébergés sans réécriture d'URL
+  history:
+    import.meta.env.VITE_ROUTER_MODE === 'hash'
+      ? createWebHashHistory()
+      : createWebHistory(import.meta.env.BASE_URL),
   routes,
   scrollBehavior: (_to, _from, savedPosition) => savedPosition ?? { top: 0 },
 })
