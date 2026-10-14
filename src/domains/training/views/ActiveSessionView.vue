@@ -12,11 +12,12 @@ import { useToastStore } from '@/stores/toasts'
 import type { Exercise } from '@/types/domain'
 
 import { useActiveSessionStore } from '../activeSessionStore'
+import SessionExerciseList from '../components/SessionExerciseList.vue'
 
 /**
- * Écran de séance active (version initiale) : en-tête, chronomètre,
- * état de sauvegarde, ajout d'exercices, fin ou abandon. La liste détaillée
- * et la saisie des séries arrivent avec SCRUM-137 / SCRUM-139.
+ * Écran de séance active : en-tête, chronomètre, état de sauvegarde,
+ * exercices (ajout, ordre, retrait), fin ou abandon.
+ * La saisie des séries arrive avec SCRUM-139.
  */
 const active = useActiveSessionStore()
 const toasts = useToastStore()
@@ -103,12 +104,7 @@ async function abandon() {
       </StateView>
 
       <template v-else>
-        <!-- Liste provisoire : la liste réordonnable et la saisie arrivent avec SCRUM-137 -->
-        <ul class="session__exercises" role="list">
-          <li v-for="entry in active.session.exercises" :key="entry.id">
-            {{ active.exercises[entry.exerciseId]?.name }}
-          </li>
-        </ul>
+        <SessionExerciseList />
         <BaseButton variant="secondary" block @click="picking = true">
           Ajouter un exercice
         </BaseButton>
@@ -172,17 +168,6 @@ async function abandon() {
 .session__clock {
   font-size: var(--font-size-3xl);
   color: var(--color-accent-text);
-}
-
-.session__exercises {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-4);
-  font-weight: var(--font-weight-semibold);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
 }
 
 .session__footer {
