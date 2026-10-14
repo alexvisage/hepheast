@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import { ChevronRight, Plus, Search, Star } from '@lucide/vue'
 
 import StateView from '@/components/ui/StateView.vue'
@@ -15,7 +16,16 @@ import FavoriteToggle from './FavoriteToggle.vue'
  * Recherche et filtres du catalogue, partagés entre la page Exercices
  * (mode « link ») et le sélecteur de la séance (mode « select »).
  */
-withDefaults(defineProps<{ mode?: 'link' | 'select' }>(), { mode: 'link' })
+withDefaults(
+  defineProps<{
+    mode?: 'link' | 'select'
+    /** Action de chaque ligne en mode « select » : « Ajouter à la séance », « …au programme » */
+    selectLabel?: string
+    /** Place le curseur dans la recherche dès l'affichage (sélecteur en surcouche) */
+    autofocus?: boolean
+  }>(),
+  { mode: 'link', selectLabel: 'Ajouter' },
+)
 
 const emit = defineEmits<{ select: [exercise: Exercise] }>()
 
@@ -82,6 +92,7 @@ onMounted(async () => {
           type="search"
           placeholder="Rechercher : squat, tirage, RDL…"
           autocomplete="off"
+          :autofocus="autofocus"
         />
       </label>
       <div class="exercise-search__selects">
@@ -158,7 +169,7 @@ onMounted(async () => {
             <span class="exercise-row__meta">{{ catalog.summary(exercise) }}</span>
           </span>
           <Plus class="exercise-row__icon" :size="20" aria-hidden="true" />
-          <span class="visually-hidden">Ajouter à la séance</span>
+          <span class="visually-hidden">{{ selectLabel }}</span>
         </button>
         <FavoriteToggle :exercise="exercise" class="exercise-list__favorite" />
       </li>

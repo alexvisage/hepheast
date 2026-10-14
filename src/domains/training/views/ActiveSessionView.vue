@@ -6,15 +6,17 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import StateView from '@/components/ui/StateView.vue'
 import SyncStatus from '@/components/ui/SyncStatus.vue'
+import ExercisePickerDialog from '@/domains/exercises/components/ExercisePickerDialog.vue'
 import { formatClock } from '@/services/format'
 import { useToastStore } from '@/stores/toasts'
+import type { Exercise } from '@/types/domain'
 
 import { useActiveSessionStore } from '../activeSessionStore'
 
 /**
  * Écran de séance active (version initiale) : en-tête, chronomètre,
- * état de sauvegarde, fin ou abandon. La saisie des exercices et des
- * séries arrive avec SCRUM-137 / SCRUM-139.
+ * état de sauvegarde, ajout d'exercices, fin ou abandon. La liste détaillée
+ * et la saisie des séries arrivent avec SCRUM-137 / SCRUM-139.
  */
 const active = useActiveSessionStore()
 const toasts = useToastStore()
@@ -23,6 +25,7 @@ const router = useRouter()
 const now = ref(Date.now())
 let clock: ReturnType<typeof setInterval> | undefined
 const confirmAbandon = ref(false)
+const picking = ref(false)
 const finishing = ref(false)
 
 const elapsed = computed(() =>
@@ -38,6 +41,14 @@ onBeforeUnmount(() => {
   clearInterval(clock)
   void active.flush()
 })
+
+async function addExercise(exercise: Exercise) {
+  try {
+    await active.addExercise(exercise)
+  } catch {
+    toasts.show(`« ${exercise.name} » n’a pas pu être ajouté. Réessaie.`, 'danger')
+  }
+}
 
 async function finish() {
   finishing.value = true
@@ -83,10 +94,25 @@ async function abandon() {
       </header>
 
       <StateView
+        v-if="active.session.exercises.length === 0"
         kind="empty"
         title="Ajoute ton premier exercice"
-        description="La saisie des exercices et des séries arrive dans la prochaine étape."
-      />
+        description="Cherche dans le catalogue ou filtre sur tes favoris."
+      >
+        <BaseButton @click="picking = true">Ajouter un exercice</BaseButton>
+      </StateView>
+
+      <template v-else>
+        <!-- Liste provisoire : la liste réordonnable et la saisie arrivent avec SCRUM-137 -->
+        <ul class="session__exercises" role="list">
+          <li v-for="entry in active.session.exercises" :key="entry.id">
+            {{ active.exercises[entry.exerciseId]?.name }}
+          </li>
+        </ul>
+        <BaseButton variant="secondary" block @click="picking = true">
+          Ajouter un exercice
+        </BaseButton>
+      </template>
 
       <footer class="session__footer">
         <BaseButton size="lg" block :loading="finishing" @click="finish">
@@ -96,6 +122,12 @@ async function abandon() {
           Abandonner la séance
         </BaseButton>
       </footer>
+
+      <ExercisePickerDialog
+        v-model:open="picking"
+        select-label="Ajouter à la séance"
+        @select="addExercise"
+      />
 
       <ConfirmDialog
         v-model:open="confirmAbandon"
@@ -140,6 +172,17 @@ async function abandon() {
 .session__clock {
   font-size: var(--font-size-3xl);
   color: var(--color-accent-text);
+}
+
+.session__exercises {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  font-weight: var(--font-weight-semibold);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
 }
 
 .session__footer {
