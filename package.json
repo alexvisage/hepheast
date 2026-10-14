@@ -17,9 +17,11 @@
     "lint:style": "stylelint \"src/**/*.{css,vue}\" --fix --allow-empty-input",
     "format:check": "prettier --check .",
     "lint:check": "oxlint . && eslint . && stylelint \"src/**/*.{css,vue}\" --allow-empty-input",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@fontsource-variable/archivo": "^5.3.0",
     "pinia": "^4.0.3",
     "vue": "^3.5.42",
     "vue-router": "^5.3.1"
