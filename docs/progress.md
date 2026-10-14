@@ -29,30 +29,49 @@ Dernière mise à jour : 14/10/2026. À mettre à jour à chaque fin de session.
 - **Fin de séance** (SCRUM-151) : dialogue de clôture (totaux, ressenti 1-5, note) puis écran
   récapitulatif `/entrainement/seance/recapitulatif`, qui relit la dernière séance terminée dans
   les services et affiche la définition du volume.
-- **Tests** : polyfill `<dialog>` dans `src/__tests__/setup.ts` (jsdom n'implémente pas
-  `showModal()`), déclaré en `setupFiles` de Vitest. 129 tests.
+- **Dates** (SCRUM-91, 162) : `services/dates.ts` — clé de jour `YYYY-MM-DD` calculée dans le
+  fuseau de l'utilisateur, arithmétique sur des minuits UTC (insensible à l'heure d'été), bornes
+  de semaine selon `weekStartsOn`, grille de mois, formats français.
+- **Tableau de bord** (SCRUM-178) : reprise de séance, prochaine séance planifiée avec
+  « Démarrer », semaine en cours (pastilles par jour, séances, séries, volume, temps),
+  régularité, dernière séance, raccourcis, état vide pour un nouveau venu.
+- **Historique** (SCRUM-154, 156) : liste chronologique paginée (10 par page) avec filtres
+  combinables période / exercice / muscle / équipement, et page de détail d'une séance passée
+  (valeurs exactes, type de série, notes) partageant `SessionRecap` avec le récapitulatif.
+- **Calendrier** (SCRUM-161, 165, 166) : vues mois / semaine / jour, navigation, statuts
+  planifiée / terminée / manquée / déplacée par icône **et** libellé, résumé de la semaine,
+  planification, déplacement (±1 jour ou date précise), annulation, « Démarrer » et
+  « Voir le détail ». `ScheduledWorkout` ajouté au modèle et au service `schedule`.
+- **Progression** (SCRUM-180, 181, 182) : ECharts en imports sélectifs (`LineChart` en SVG,
+  couleurs lues dans les tokens), courbe charge max / volume / 1RM estimé, tableau équivalent,
+  sélecteurs d'exercice et de période, formule d'Epley affichée.
+- **Profil** (SCRUM-90) : nom affiché, unité, fuseau, premier jour de semaine, repos par défaut,
+  démarrage automatique du repos, déconnexion. Validation Zod.
+- **Tests** : polyfill `<dialog>` et bouchon canvas 2D dans `src/__tests__/setup.ts` (jsdom
+  n'implémente ni `showModal()` ni `getContext('2d')`, dont ECharts a besoin pour mesurer le
+  texte des axes). 227 tests.
 
-Stories laissées « En cours » car seule la partie front existe : SCRUM-51, 96, 97, 98, 100,
-101, 102.
-Sous-tâche laissée « En cours » : SCRUM-137, le glisser-déposer reste à faire (les boutons
-monter/descendre sont en place).
+Stories laissées « En cours » car seule la partie front existe : SCRUM-51, 53, 96, 97, 98, 100,
+101, 102, 103, 105, 106, 107, 110, 111, 112, 116, 117.
+Sous-tâches laissées « En cours » : SCRUM-137 et SCRUM-165 — le glisser-déposer reste à faire
+dans les deux cas, les alternatives clavier et tactile sont en place.
 
 ## Prochaines étapes, dans l'ordre
 
-Le parcours de séance est complet de bout en bout : démarrer, ajouter des exercices, saisir,
-se reposer, terminer, voir le récapitulatif. Restent les manques repérés en relisant les
-critères d'acceptation des stories :
+Toutes les pages du pratiquant existent, sauf **Programmes** (phase 3). Restent les manques
+repérés en relisant les critères d'acceptation :
 
-1. **Pause et reprise de séance** (AC de SCRUM-105) : `WorkoutStatus` prévoit `paused`, mais
-   ni le store ni l'UI ne l'utilisent.
-2. **Historique** (SCRUM-154, 156) : « la séance apparaît immédiatement dans l'historique »
-   reste à vérifier à l'écran ; les données sont déjà là (`listCompletedSessions`).
-3. **Records personnels** : SCRUM-29 (définition) puis SCRUM-184 (badge en séance et dans le
-   récapitulatif).
-4. **SCRUM-137, reste** : glisser-déposer des exercices, en complément des boutons.
-5. **Pagination du catalogue** (AC de SCRUM-96) : la liste est rendue d'un bloc.
-
-Ensuite : tableau de bord (SCRUM-178), profil (SCRUM-90), test E2E du parcours (SCRUM-152).
+1. **Records personnels** : SCRUM-29 (définition) puis SCRUM-184 (badge en séance, liste, et
+   affichage dans le récapitulatif de fin de séance).
+2. **Pause et reprise de séance** (AC de SCRUM-105) : `WorkoutStatus` prévoit `paused`, mais ni
+   le store ni l'UI ne l'utilisent. Aucune sous-tâche front ne le couvre : à créer.
+3. **Programmes** (SCRUM-13, phase 3) : la page est encore vide et le modèle (`Program`,
+   `ProgramVersion`, `ProgramDay`) n'existe pas. C'est le dernier gros morceau du pratiquant.
+4. **Glisser-déposer** : exercices d'une séance (SCRUM-137) et séances du calendrier (SCRUM-165).
+5. **Période personnalisée** sur la progression (AC de SCRUM-117) : `listSessions` accepte déjà
+   `from`/`to`, il ne manque que deux champs de date.
+6. **Pagination du catalogue** (AC de SCRUM-96) : la liste est rendue d'un bloc.
+7. **Test E2E du parcours de séance** (SCRUM-152).
 
 ## Points ouverts
 
@@ -69,7 +88,12 @@ Ensuite : tableau de bord (SCRUM-178), profil (SCRUM-90), test E2E du parcours (
   de réglage des préférences reste à faire (SCRUM-90) ; en attendant, la case est dans la barre
   de repos.
 - Le minuteur de repos ne survit pas à un rechargement de page (état en mémoire).
-- Pages encore vides : tableau de bord, programmes, calendrier, progression, profil.
+- Page encore vide : programmes.
+- ECharts pèse **173 kB gzip** dans son propre lot, chargé seulement par `/progression` et
+  `/design-system`. Choix assumé (SCRUM-180) ; à surveiller si d'autres écrans l'importent.
+- Les filtres de date de l'adaptateur local lisent le jour dans le fuseau du **navigateur**,
+  pas dans la préférence enregistrée. Sans effet en pratique (ce sont les mêmes), à corriger
+  côté Supabase.
 - Nom du produit : HEPHAEST (CDC) ou Hepheast (Jira).
 - Compte de démo pré-rempli en dev : proposé, pas encore fait.
 - Arbitrages restants : voir `decisions.md`.
