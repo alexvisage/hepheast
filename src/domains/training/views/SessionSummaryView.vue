@@ -112,6 +112,11 @@ onMounted(load)
         </div>
       </dl>
 
+      <p class="recap__definition text-muted">
+        Volume = somme des charges × répétitions des séries de travail validées. Les échauffements
+        et les séries ignorées n'y entrent pas.
+      </p>
+
       <BaseCard title="Exercice par exercice">
         <ul class="recap__exercises" role="list">
           <li v-for="item in recap" :key="item.entry.id" class="recap__exercise">
@@ -200,6 +205,11 @@ onMounted(load)
 .recap__stat dd {
   font-size: var(--font-size-2xl);
   color: var(--color-accent-text);
+}
+
+.recap__definition {
+  margin-top: calc(-1 * var(--space-3));
+  font-size: var(--font-size-sm);
 }
 
 .recap__exercises,

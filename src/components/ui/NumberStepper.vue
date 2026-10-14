@@ -24,8 +24,11 @@ const props = withDefaults(
 const model = defineModel<number | null>({ default: null })
 
 const id = useId()
+const hintId = useId()
 const stepLabel = props.step.toLocaleString('fr-FR')
 const draft = ref(format(model.value))
+/** Message affiché quand la saisie est hors bornes ou illisible */
+const hint = ref('')
 
 watch(model, (value) => {
   if (parse(draft.value) !== value) draft.value = format(value)
@@ -51,13 +54,30 @@ function round(value: number): number {
   return Math.round(value * 100) / 100
 }
 
+/** Une valeur refusée est corrigée, mais jamais en silence (CDC §9.3) */
 function commit() {
   const parsed = parse(draft.value)
-  model.value = parsed === null ? null : clamp(round(parsed))
-  draft.value = format(model.value)
+  if (parsed === null) {
+    hint.value = draft.value.trim() === '' ? '' : 'Nombre attendu'
+    model.value = null
+    draft.value = ''
+    return
+  }
+  const bounded = clamp(round(parsed))
+  hint.value = describeCorrection(round(parsed), bounded)
+  model.value = bounded
+  draft.value = format(bounded)
+}
+
+function describeCorrection(asked: number, applied: number): string {
+  if (asked === applied) return ''
+  const limit = applied === props.max ? props.max : props.min
+  const suffix = applied === props.max ? 'au maximum' : 'au minimum'
+  return props.unit ? `${limit} ${props.unit} ${suffix}` : `${limit} ${suffix}`
 }
 
 function increment(direction: 1 | -1) {
+  hint.value = ''
   const base = model.value ?? 0
   model.value = clamp(round(base + direction * props.step))
   draft.value = format(model.value)
@@ -88,6 +108,8 @@ function increment(direction: 1 | -1) {
           inputmode="decimal"
           autocomplete="off"
           placeholder="–"
+          :aria-describedby="hint ? hintId : undefined"
+          :aria-invalid="hint ? true : undefined"
           @blur="commit"
           @keydown.enter.prevent="commit"
           @keydown.up.prevent="increment(1)"
@@ -105,6 +127,7 @@ function increment(direction: 1 | -1) {
         <Plus :size="20" aria-hidden="true" />
       </button>
     </div>
+    <p v-if="hint" :id="hintId" class="stepper__hint" role="status">{{ hint }}</p>
   </div>
 </template>
 
@@ -200,6 +223,11 @@ function increment(direction: 1 | -1) {
 
 .stepper__input::placeholder {
   color: var(--color-text-subtle);
+}
+
+.stepper__hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-warning);
 }
 
 .stepper__unit {

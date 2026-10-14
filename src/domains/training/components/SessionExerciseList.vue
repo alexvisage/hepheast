@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import { useToastStore } from '@/stores/toasts'
-import type { WorkoutExercise } from '@/types/domain'
+import type { SetEntry, WorkoutExercise } from '@/types/domain'
 
 import { useActiveSessionStore } from '../activeSessionStore'
 
@@ -28,13 +28,20 @@ const confirming = ref(false)
 const pending = ref<WorkoutExercise | null>(null)
 const announcement = ref('')
 
-/** « Développé couché compte 2 séries validées. Elles seront perdues. » */
+/** Une série porte de la saisie dès qu'elle a une valeur, une note ou un statut */
+function hasInput(set: SetEntry): boolean {
+  return (
+    set.status !== 'planned' || set.reps !== null || set.load !== null || set.note !== undefined
+  )
+}
+
+/** « Développé couché compte 2 séries saisies. Elles seront perdues. » */
 const removalWarning = computed(() => {
   if (!pending.value) return ''
-  const count = pending.value.sets.filter((set) => set.status === 'done').length
+  const count = pending.value.sets.filter(hasInput).length
   const s = count > 1 ? 's' : ''
   const verb = count > 1 ? 'seront' : 'sera'
-  return `${nameOf(pending.value)} compte ${count} série${s} validée${s}. Elle${s} ${verb} perdue${s}.`
+  return `${nameOf(pending.value)} compte ${count} série${s} saisie${s}. Elle${s} ${verb} perdue${s}.`
 })
 
 function nameOf(entry: WorkoutExercise): string {
@@ -55,7 +62,7 @@ function move(entry: WorkoutExercise, direction: -1 | 1) {
 }
 
 function requestRemoval(entry: WorkoutExercise) {
-  if (entry.sets.some((set) => set.status === 'done')) {
+  if (entry.sets.some(hasInput)) {
     pending.value = entry
     confirming.value = true
     return

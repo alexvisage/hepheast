@@ -52,6 +52,47 @@ describe('NumberStepper', () => {
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([null])
   })
 
+  it('explique la correction quand la valeur dépasse le maximum', async () => {
+    const wrapper = mount(NumberStepper, {
+      props: { label: 'Charge', unit: 'kg', max: 500, modelValue: null },
+    })
+    const input = wrapper.get('input')
+    await input.setValue('900')
+    await input.trigger('blur')
+
+    expect(wrapper.get('.stepper__hint').text()).toBe('500 kg au maximum')
+    expect(input.attributes('aria-invalid')).toBe('true')
+    expect(input.attributes('aria-describedby')).toBe(
+      wrapper.get('.stepper__hint').attributes('id'),
+    )
+  })
+
+  it('explique la correction sous le minimum et la saisie illisible', async () => {
+    const wrapper = mount(NumberStepper, {
+      props: { label: 'Répétitions', min: 0, modelValue: null },
+    })
+    const input = wrapper.get('input')
+    await input.setValue('-5')
+    await input.trigger('blur')
+    expect(wrapper.get('.stepper__hint').text()).toBe('0 au minimum')
+
+    await input.setValue('abc')
+    await input.trigger('blur')
+    expect(wrapper.get('.stepper__hint').text()).toBe('Nombre attendu')
+  })
+
+  it('efface le message dès que la valeur redevient acceptable', async () => {
+    const wrapper = mount(NumberStepper, { props: { label: 'Charge', max: 500, modelValue: null } })
+    const input = wrapper.get('input')
+    await input.setValue('900')
+    await input.trigger('blur')
+    expect(wrapper.find('.stepper__hint').exists()).toBe(true)
+
+    await input.setValue('120')
+    await input.trigger('blur')
+    expect(wrapper.find('.stepper__hint').exists()).toBe(false)
+  })
+
   it('donne un libellé explicite aux boutons −/+', () => {
     const wrapper = mount(NumberStepper, {
       props: { label: 'Charge', step: 2.5, modelValue: 60 },

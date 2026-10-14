@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 
+import { services } from '@/services'
+
 import ExercisePickerDialog from '../ExercisePickerDialog.vue'
 
 /** Monte le sélecteur fermé puis l'ouvre, et attend l'affichage du catalogue */
@@ -49,6 +51,16 @@ describe('ExercisePickerDialog', () => {
     expect(selected?.id).toBe('bench-press')
     expect(wrapper.get('dialog').element.open).toBe(true)
     expect(wrapper.get('.picker__feedback').text()).toBe('Développé couché ajouté')
+  })
+
+  it('remonte les favoris en tête de liste', async () => {
+    await services.exercises.setFavorite('back-squat', true)
+    const wrapper = await openPicker()
+    const names = wrapper.findAll('.exercise-row__name').map((node) => node.text())
+
+    expect(names[0]).toBe('Squat')
+    // Le reste du catalogue garde son ordre
+    expect(names.filter((name) => name === 'Squat')).toHaveLength(1)
   })
 
   it('reprend le libellé d’action fourni par l’appelant', async () => {

@@ -80,7 +80,7 @@ describe('SessionExerciseList', () => {
     await store.flush()
   })
 
-  it('demande confirmation quand des séries sont validées', async () => {
+  it('demande confirmation quand des séries sont saisies', async () => {
     const store = await startSession()
     const entry = store.session!.exercises[0]!
     store.updateSet(entry.id, entry.sets[0]!.id, { reps: 8, load: 80 })
@@ -90,7 +90,7 @@ describe('SessionExerciseList', () => {
     await wrapper.get('[aria-label="Retirer Développé couché de la séance"]').trigger('click')
 
     const dialog = openDialog(wrapper)
-    expect(dialog.text()).toContain('Développé couché compte 1 série validée.')
+    expect(dialog.text()).toContain('Développé couché compte 1 série saisie.')
     expect(names(wrapper)).toEqual(['Développé couché', 'Squat'])
 
     const confirm = dialog.findAll('button').find((button) => button.text() === 'Retirer')
@@ -98,6 +98,19 @@ describe('SessionExerciseList', () => {
 
     expect(names(wrapper)).toEqual(['Squat'])
     expect(store.session?.exercises).toHaveLength(1)
+    await store.flush()
+  })
+
+  it('demande confirmation pour une saisie non encore validée', async () => {
+    const store = await startSession()
+    const entry = store.session!.exercises[0]!
+    store.updateSet(entry.id, entry.sets[0]!.id, { reps: 8 })
+    const wrapper = mount(SessionExerciseList, { attachTo: document.body })
+
+    await wrapper.get('[aria-label="Retirer Développé couché de la séance"]').trigger('click')
+
+    expect(openDialog(wrapper).text()).toContain('1 série saisie')
+    expect(names(wrapper)).toEqual(['Développé couché', 'Squat'])
     await store.flush()
   })
 

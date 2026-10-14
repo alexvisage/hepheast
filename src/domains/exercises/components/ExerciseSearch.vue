@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ChevronRight, Plus, Search, Star } from '@lucide/vue'
 
@@ -16,7 +16,7 @@ import FavoriteToggle from './FavoriteToggle.vue'
  * Recherche et filtres du catalogue, partagés entre la page Exercices
  * (mode « link ») et le sélecteur de la séance (mode « select »).
  */
-withDefaults(
+const props = withDefaults(
   defineProps<{
     mode?: 'link' | 'select'
     /** Action de chaque ligne en mode « select » : « Ajouter à la séance », « …au programme » */
@@ -38,6 +38,18 @@ const favoritesOnly = ref(false)
 
 const results = ref<Exercise[]>([])
 const status = ref<'loading' | 'ready' | 'error'>('loading')
+
+/**
+ * En mode « select », les favoris remontent en tête : pendant une séance,
+ * ce sont eux qu'on ajoute le plus souvent (SCRUM-101). Le tri est stable,
+ * l'ordre alphabétique du catalogue est conservé à l'intérieur de chaque groupe.
+ */
+const visible = computed(() => {
+  if (props.mode !== 'select') return results.value
+  return [...results.value].sort(
+    (first, second) => Number(catalog.isFavorite(second.id)) - Number(catalog.isFavorite(first.id)),
+  )
+})
 
 let debounce: ReturnType<typeof setTimeout> | undefined
 let requestId = 0
@@ -151,7 +163,7 @@ onMounted(async () => {
     </StateView>
 
     <ul v-else class="exercise-list" role="list" :aria-busy="status === 'loading'">
-      <li v-for="exercise in results" :key="exercise.id" class="exercise-list__item">
+      <li v-for="exercise in visible" :key="exercise.id" class="exercise-list__item">
         <RouterLink
           v-if="mode === 'link'"
           :to="{ name: 'exercise-detail', params: { id: exercise.id } }"
