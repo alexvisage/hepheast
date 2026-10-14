@@ -17,15 +17,15 @@ pnpm dev
 
 ## Scripts
 
-| Commande          | Rôle                                        |
-| ----------------- | ------------------------------------------- |
-| `pnpm dev`        | Serveur de développement                    |
-| `pnpm build`      | Vérification des types puis build de prod   |
-| `pnpm preview`    | Prévisualiser le build                      |
-| `pnpm test:unit`  | Tests unitaires et de composants (Vitest)   |
-| `pnpm type-check` | Vérification TypeScript                     |
-| `pnpm lint`       | Oxlint + ESLint + Stylelint                 |
-| `pnpm format`     | Formatage Prettier                          |
+| Commande          | Rôle                                      |
+| ----------------- | ----------------------------------------- |
+| `pnpm dev`        | Serveur de développement                  |
+| `pnpm build`      | Vérification des types puis build de prod |
+| `pnpm preview`    | Prévisualiser le build                    |
+| `pnpm test:unit`  | Tests unitaires et de composants (Vitest) |
+| `pnpm type-check` | Vérification TypeScript                   |
+| `pnpm lint`       | Oxlint + ESLint + Stylelint               |
+| `pnpm format`     | Formatage Prettier                        |
 
 ## Structure
 
