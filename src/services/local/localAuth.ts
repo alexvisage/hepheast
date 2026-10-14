@@ -77,6 +77,17 @@ export function createLocalAuth(): AuthService & { currentUserId(): string | nul
       removeKey(SESSION_KEY)
     },
 
+    async updateProfile({ displayName }) {
+      await latency()
+      const id = this.currentUserId()
+      const all = accounts()
+      const account = all.find((item) => item.profile.id === id)
+      if (!account) throw new ServiceError('not-authenticated', 'Session expirée')
+      account.profile = { ...account.profile, displayName: displayName.trim() }
+      writeJson(ACCOUNTS_KEY, all)
+      return account.profile
+    },
+
     async updatePreferences(patch) {
       await latency()
       const id = this.currentUserId()

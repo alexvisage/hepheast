@@ -35,6 +35,10 @@ export const useSessionStore = defineStore('session', () => {
     user.value = null
   }
 
+  async function updateProfile(patch: { displayName: string }) {
+    user.value = await services.auth.updateProfile(patch)
+  }
+
   async function updatePreferences(patch: Partial<UserPreferences>) {
     user.value = await services.auth.updatePreferences(patch)
   }
@@ -48,6 +52,7 @@ export const useSessionStore = defineStore('session', () => {
     signIn,
     signUp,
     signOut,
+    updateProfile,
     updatePreferences,
   }
 })

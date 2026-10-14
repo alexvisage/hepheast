@@ -37,6 +37,7 @@ export interface AuthService {
   signIn(email: string, password: string): Promise<UserProfile>
   signUp(input: { email: string; password: string; displayName: string }): Promise<UserProfile>
   signOut(): Promise<void>
+  updateProfile(patch: { displayName: string }): Promise<UserProfile>
   updatePreferences(patch: Partial<UserPreferences>): Promise<UserProfile>
 }
 
