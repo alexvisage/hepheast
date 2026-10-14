@@ -6,6 +6,7 @@ import ToastHost from '@/components/ui/ToastHost.vue'
 
 import AppLayout from './layouts/AppLayout.vue'
 import AuthLayout from './layouts/AuthLayout.vue'
+import RouteAnnouncer from './RouteAnnouncer.vue'
 
 const route = useRoute()
 
@@ -13,6 +14,7 @@ const layout = computed(() => (route.meta.layout === 'auth' ? AuthLayout : AppLa
 </script>
 
 <template>
+  <RouteAnnouncer />
   <component :is="layout">
     <RouterView />
   </component>
