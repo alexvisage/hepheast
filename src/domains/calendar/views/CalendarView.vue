@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   CalendarClock,
   ChevronLeft,
@@ -15,6 +16,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import IconButton from '@/components/ui/IconButton.vue'
 import StateView from '@/components/ui/StateView.vue'
 import { summarizeWeek, weeklyStreak } from '@/domains/progress/dashboard'
+import { useActiveSessionStore } from '@/domains/training/activeSessionStore'
 import { services } from '@/services'
 import {
   addDays,
@@ -59,8 +61,10 @@ const LEGEND: { status: CalendarStatus; icon: unknown }[] = [
   { status: 'moved', icon: MoveRight },
 ]
 
+const active = useActiveSessionStore()
 const session = useSessionStore()
 const toasts = useToastStore()
+const router = useRouter()
 
 const mode = ref<CalendarMode>('month')
 const planning = ref(false)
@@ -146,6 +150,24 @@ function goToToday() {
   selected.value = today.value
 }
 
+// --- Depuis le calendrier vers la séance ---------------------------------
+
+/** Démarre la séance du créneau et la rattache, pour que le suivi reste juste */
+async function start(entry: CalendarEntry) {
+  if (active.session) {
+    toasts.show('Une séance est déjà en cours.', 'warning')
+    await router.push({ name: 'active-session' })
+    return
+  }
+  try {
+    const started = await active.start(entry.title)
+    if (entry.scheduledId) await services.schedule.linkSession(entry.scheduledId, started.id)
+    await router.push({ name: 'active-session' })
+  } catch {
+    toasts.show('La séance n’a pas pu être démarrée. Réessaie.', 'danger')
+  }
+}
+
 // --- Planification ------------------------------------------------------
 
 async function plan({ date, title }: { date: DateKey; title: string }) {
@@ -200,7 +222,10 @@ async function confirmCancel() {
 
 watch([visibleDays], load)
 
-onMounted(load)
+onMounted(() => {
+  if (!active.loaded) void active.load()
+  void load()
+})
 </script>
 
 <template>
@@ -283,15 +308,26 @@ onMounted(load)
               </span>
             </span>
 
-            <span v-if="entry.scheduledId && entry.status !== 'done'" class="day__actions">
-              <IconButton :label="`Avancer ${entry.title} d’un jour`" @click="nudge(entry, -1)">
-                <ChevronLeft :size="20" aria-hidden="true" />
-              </IconButton>
-              <IconButton :label="`Reporter ${entry.title} d’un jour`" @click="nudge(entry, 1)">
-                <ChevronRight :size="20" aria-hidden="true" />
-              </IconButton>
-              <BaseButton variant="ghost" @click="moving = entry">Déplacer</BaseButton>
-              <BaseButton variant="ghost" @click="requestCancel(entry)">Annuler</BaseButton>
+            <span class="day__actions">
+              <BaseButton v-if="entry.status !== 'done'" @click="start(entry)">Démarrer</BaseButton>
+              <BaseButton
+                v-if="entry.sessionId"
+                variant="secondary"
+                :to="{ name: 'session-detail', params: { id: entry.sessionId } }"
+              >
+                Voir le détail
+              </BaseButton>
+
+              <template v-if="entry.scheduledId && entry.status !== 'done'">
+                <IconButton :label="`Avancer ${entry.title} d’un jour`" @click="nudge(entry, -1)">
+                  <ChevronLeft :size="20" aria-hidden="true" />
+                </IconButton>
+                <IconButton :label="`Reporter ${entry.title} d’un jour`" @click="nudge(entry, 1)">
+                  <ChevronRight :size="20" aria-hidden="true" />
+                </IconButton>
+                <BaseButton variant="ghost" @click="moving = entry">Déplacer</BaseButton>
+                <BaseButton variant="ghost" @click="requestCancel(entry)">Annuler</BaseButton>
+              </template>
             </span>
           </li>
         </ul>

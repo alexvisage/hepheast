@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter, type Router } from 'vue-router'
+
+import { routes } from '@/app/router/routes'
 
 import { services } from '@/services'
 import { useSessionStore } from '@/stores/session'
@@ -23,8 +26,10 @@ function signIn() {
   }
 }
 
+let router: Router
+
 async function mountCalendar() {
-  const wrapper = mount(CalendarView, { attachTo: document.body })
+  const wrapper = mount(CalendarView, { global: { plugins: [router] }, attachTo: document.body })
   await vi.waitFor(() => expect(wrapper.find('.cell').exists()).toBe(true))
   return wrapper
 }
@@ -51,11 +56,14 @@ async function listPlans() {
 }
 
 describe('planification depuis le calendrier', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     localStorage.clear()
     vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-14T10:00:00.000Z') })
     setActivePinia(createPinia())
     signIn()
+    router = createRouter({ history: createMemoryHistory(), routes })
+    await router.push('/calendrier')
+    await router.isReady()
   })
 
   afterEach(() => {
@@ -138,6 +146,7 @@ describe('planification depuis le calendrier', () => {
 
     const wrapper = await mountCalendar()
     await vi.waitFor(() => expect(wrapper.get('.day__status').text()).toBe('Terminée'))
-    expect(wrapper.find('.day__actions').exists()).toBe(false)
+    expect(button(wrapper, 'Déplacer')).toBeUndefined()
+    expect(wrapper.get('.day__actions').text()).not.toContain('Annuler')
   })
 })

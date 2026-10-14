@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter, type Router } from 'vue-router'
+
+import { routes } from '@/app/router/routes'
 
 import { services } from '@/services'
 import { useSessionStore } from '@/stores/session'
@@ -23,8 +26,10 @@ function signIn(weekStartsOn: WeekStart = 1) {
   }
 }
 
+let router: Router
+
 async function mountCalendar() {
-  const wrapper = mount(CalendarView)
+  const wrapper = mount(CalendarView, { global: { plugins: [router] } })
   await vi.waitFor(() => expect(wrapper.find('.cell').exists()).toBe(true))
   return wrapper
 }
@@ -34,12 +39,15 @@ function mode(wrapper: ReturnType<typeof mount>, label: string) {
 }
 
 describe('CalendarView', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     localStorage.clear()
     // Seul Date est simulé : les latences des services restent réelles
     vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-14T10:00:00.000Z') })
     setActivePinia(createPinia())
     signIn()
+    router = createRouter({ history: createMemoryHistory(), routes })
+    await router.push('/calendrier')
+    await router.isReady()
   })
 
   afterEach(() => {
