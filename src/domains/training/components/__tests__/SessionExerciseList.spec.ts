@@ -22,6 +22,13 @@ function names(wrapper: ReturnType<typeof mount>) {
   return wrapper.findAll('.session-exercise__name').map((node) => node.text())
 }
 
+/** Chaque série porte aussi son dialogue de suppression : on cible celui qui est ouvert */
+function openDialog(wrapper: ReturnType<typeof mount>) {
+  const dialog = wrapper.findAll('dialog').find((node) => node.element.open)
+  expect(dialog).toBeDefined()
+  return dialog!
+}
+
 describe('SessionExerciseList', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -82,8 +89,7 @@ describe('SessionExerciseList', () => {
 
     await wrapper.get('[aria-label="Retirer Développé couché de la séance"]').trigger('click')
 
-    const dialog = wrapper.get('dialog')
-    expect(dialog.element.open).toBe(true)
+    const dialog = openDialog(wrapper)
     expect(dialog.text()).toContain('Développé couché compte 1 série validée.')
     expect(names(wrapper)).toEqual(['Développé couché', 'Squat'])
 

@@ -8,6 +8,7 @@ import type { WorkoutExercise } from '@/types/domain'
 import { useActiveSessionStore } from '../activeSessionStore'
 
 import SessionExerciseCard from './SessionExerciseCard.vue'
+import SessionSetList from './SessionSetList.vue'
 
 /**
  * Liste ordonnée des exercices de la séance en cours (CDC §4.2).
@@ -90,7 +91,9 @@ function confirmRemoval() {
           :total="entries.length"
           @move="move(entry, $event)"
           @remove="requestRemoval(entry)"
-        />
+        >
+          <SessionSetList :entry="entry" />
+        </SessionExerciseCard>
       </li>
     </ul>
 

@@ -92,6 +92,7 @@ const swatches = [
       <div class="row row--steppers">
         <NumberStepper v-model="load" label="Charge" unit="kg" :step="2.5" />
         <NumberStepper v-model="reps" label="Répétitions" />
+        <NumberStepper v-model="load" label="Charge (compact)" unit="kg" :step="2.5" size="sm" />
       </div>
     </BaseCard>
 

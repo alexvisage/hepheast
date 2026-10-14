@@ -15,8 +15,10 @@ const props = withDefaults(
     max?: number
     /** Masque visuellement le libellé (il reste lu par les lecteurs d'écran) */
     hideLabel?: boolean
+    /** « sm » : variante compacte, pour aligner plusieurs champs sur la largeur mobile */
+    size?: 'sm' | 'md'
   }>(),
-  { unit: undefined, step: 1, min: 0, max: 9999 },
+  { unit: undefined, step: 1, min: 0, max: 9999, size: 'md' },
 )
 
 const model = defineModel<number | null>({ default: null })
@@ -63,7 +65,7 @@ function increment(direction: 1 | -1) {
 </script>
 
 <template>
-  <div class="stepper">
+  <div class="stepper" :class="`stepper--${size}`">
     <label :for="id" class="stepper__label" :class="{ 'visually-hidden': hideLabel }">
       {{ label }}
     </label>
@@ -108,10 +110,28 @@ function increment(direction: 1 | -1) {
 
 <style scoped>
 .stepper {
+  /* La variante ne redéfinit que ces mesures : une seule règle par élément */
+  --stepper-height: 3.5rem;
+  --stepper-button-width: 2.75rem;
+  --stepper-value-padding: var(--space-3);
+  --stepper-value-size: var(--font-size-2xl);
+  --stepper-unit-size: var(--font-size-sm);
+  --stepper-unit-padding: var(--space-2);
+
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   min-width: 0;
+}
+
+/* Variante compacte : même ergonomie, moins de hauteur et de largeur */
+.stepper--sm {
+  --stepper-height: var(--touch-target);
+  --stepper-button-width: 2.25rem;
+  --stepper-value-padding: var(--space-2);
+  --stepper-value-size: var(--font-size-lg);
+  --stepper-unit-size: var(--font-size-xs);
+  --stepper-unit-padding: var(--space-1);
 }
 
 .stepper__label {
@@ -123,7 +143,7 @@ function increment(direction: 1 | -1) {
 .stepper__control {
   display: flex;
   align-items: stretch;
-  min-height: 3.5rem;
+  min-height: var(--stepper-height);
   background-color: var(--color-bg-sunken);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
@@ -137,7 +157,7 @@ function increment(direction: 1 | -1) {
 .stepper__button {
   display: grid;
   place-items: center;
-  flex: 0 0 2.75rem;
+  flex: 0 0 var(--stepper-button-width);
   padding: 0;
   color: var(--color-text-muted);
   background: transparent;
@@ -161,14 +181,14 @@ function increment(direction: 1 | -1) {
   justify-content: center;
   gap: var(--space-1);
   min-width: 0;
-  padding-top: var(--space-3);
+  padding-top: var(--stepper-value-padding);
 }
 
 .stepper__input {
   width: 100%;
   min-width: 0;
   padding: 0;
-  font-size: var(--font-size-2xl);
+  font-size: var(--stepper-value-size);
   text-align: center;
   background: transparent;
   border: 0;
@@ -183,8 +203,8 @@ function increment(direction: 1 | -1) {
 }
 
 .stepper__unit {
-  padding-right: var(--space-2);
-  font-size: var(--font-size-sm);
+  padding-right: var(--stepper-unit-padding);
+  font-size: var(--stepper-unit-size);
   color: var(--color-text-muted);
 }
 </style>
