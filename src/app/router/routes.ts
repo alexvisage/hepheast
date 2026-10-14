@@ -69,6 +69,12 @@ export const routes: RouteRecordRaw[] = [
     meta: { title: 'Profil et paramètres' },
   },
   {
+    path: '/design-system',
+    name: 'design-system',
+    component: () => import('@/app/views/DesignSystemView.vue'),
+    meta: { title: 'Design system', public: true },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/app/views/NotFoundView.vue'),

@@ -22,6 +22,7 @@ const props = withDefaults(
 const model = defineModel<number | null>({ default: null })
 
 const id = useId()
+const stepLabel = props.step.toLocaleString('fr-FR')
 const draft = ref(format(model.value))
 
 watch(model, (value) => {
@@ -70,7 +71,7 @@ function increment(direction: 1 | -1) {
       <button
         type="button"
         class="stepper__button"
-        :aria-label="`Diminuer ${label.toLowerCase()} de ${step}`"
+        :aria-label="`Diminuer ${label.toLowerCase()} de ${stepLabel}`"
         :disabled="model !== null && model <= min"
         @click="increment(-1)"
       >
@@ -95,7 +96,7 @@ function increment(direction: 1 | -1) {
       <button
         type="button"
         class="stepper__button"
-        :aria-label="`Augmenter ${label.toLowerCase()} de ${step}`"
+        :aria-label="`Augmenter ${label.toLowerCase()} de ${stepLabel}`"
         :disabled="model !== null && model >= max"
         @click="increment(1)"
       >
