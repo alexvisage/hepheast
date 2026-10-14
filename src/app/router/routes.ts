@@ -38,6 +38,19 @@ export const routes: RouteRecordRaw[] = [
     meta: { title: 'Séance terminée' },
   },
   {
+    path: '/historique',
+    name: 'history',
+    component: () => import('@/domains/training/views/HistoryView.vue'),
+    meta: { title: 'Historique' },
+  },
+  {
+    path: '/historique/:id',
+    name: 'session-detail',
+    component: () => import('@/domains/training/views/SessionDetailView.vue'),
+    props: true,
+    meta: { title: 'Détail de séance' },
+  },
+  {
     path: '/programmes',
     name: 'programs',
     component: () => import('@/domains/programs/views/ProgramsView.vue'),

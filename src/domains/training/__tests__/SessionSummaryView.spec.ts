@@ -59,7 +59,7 @@ describe('SessionSummaryView', () => {
     await completeSession()
     const wrapper = mount(SessionSummaryView, { global: { stubs } })
     await vi.waitFor(() => expect(wrapper.text()).toContain('Difficile'))
-    expect(wrapper.get('.recap__note').text()).toBe('Bonne séance')
+    expect(wrapper.get('.summary__note').text()).toBe('Bonne séance')
   })
 
   it('propose de démarrer une séance quand l’historique est vide', async () => {

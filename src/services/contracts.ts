@@ -10,6 +10,7 @@ import type {
   UserPreferences,
   UserProfile,
   WorkoutSession,
+  WorkoutStatus,
 } from '@/types/domain'
 
 /**
@@ -56,12 +57,38 @@ export interface ExerciseCatalogService {
   setFavorite(id: Id, favorite: boolean): Promise<void>
 }
 
+/** Filtres de l'historique (CDC §4.3) */
+export interface SessionFilters {
+  /** Premier jour inclus, `YYYY-MM-DD` */
+  from?: DayKey
+  /** Dernier jour inclus */
+  to?: DayKey
+  exerciseId?: Id
+  muscleId?: Id
+  equipmentId?: Id
+  programId?: Id
+  status?: WorkoutStatus
+}
+
+export interface SessionPage {
+  sessions: WorkoutSession[]
+  /** Curseur de la page suivante ; absent quand tout est chargé */
+  nextCursor?: string
+}
+
 export interface WorkoutService {
   getActiveSession(): Promise<WorkoutSession | null>
   startSession(input: { title: string }): Promise<WorkoutSession>
   /** Sauvegarde idempotente de l'état complet de la séance */
   saveSession(session: WorkoutSession): Promise<WorkoutSession>
   listCompletedSessions(limit?: number): Promise<WorkoutSession[]>
+  /** Historique des séances achevées, par pages, du plus récent au plus ancien */
+  listSessions(query?: {
+    filters?: SessionFilters
+    limit?: number
+    cursor?: string
+  }): Promise<SessionPage>
+  getSession(id: Id): Promise<WorkoutSession>
   getLastPerformance(exerciseId: Id): Promise<LastPerformance | null>
 }
 
