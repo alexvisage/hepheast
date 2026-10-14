@@ -11,6 +11,7 @@ import {
 
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import IconButton from '@/components/ui/IconButton.vue'
 import StateView from '@/components/ui/StateView.vue'
 import { summarizeWeek, weeklyStreak } from '@/domains/progress/dashboard'
@@ -29,10 +30,12 @@ import {
 } from '@/services/dates'
 import { formatNumber } from '@/services/format'
 import { useSessionStore } from '@/stores/session'
+import { useToastStore } from '@/stores/toasts'
 import type { ScheduledWorkout, WorkoutSession } from '@/types/domain'
 
 import CalendarGrid from '../components/CalendarGrid.vue'
-import { buildCalendar, STATUS_LABELS, type CalendarStatus } from '../schedule'
+import CalendarPlanDialog from '../components/CalendarPlanDialog.vue'
+import { buildCalendar, STATUS_LABELS, type CalendarEntry, type CalendarStatus } from '../schedule'
 
 /**
  * Calendrier des séances (CDC §4.5, AC-06) : vues mois, semaine et jour,
@@ -57,8 +60,13 @@ const LEGEND: { status: CalendarStatus; icon: unknown }[] = [
 ]
 
 const session = useSessionStore()
+const toasts = useToastStore()
 
 const mode = ref<CalendarMode>('month')
+const planning = ref(false)
+const moving = ref<CalendarEntry | null>(null)
+const cancelling = ref<CalendarEntry | null>(null)
+const confirmingCancel = ref(false)
 const selected = ref<DateKey>(todayKey(session.preferences?.timeZone))
 const scheduled = ref<ScheduledWorkout[]>([])
 const sessions = ref<WorkoutSession[]>([])
@@ -138,6 +146,58 @@ function goToToday() {
   selected.value = today.value
 }
 
+// --- Planification ------------------------------------------------------
+
+async function plan({ date, title }: { date: DateKey; title: string }) {
+  try {
+    await services.schedule.createScheduled({ date, title })
+    selected.value = date
+    await load()
+    toasts.show(`${title} planifiée le ${formatLongDate(date)}`, 'success')
+  } catch {
+    toasts.show('La séance n’a pas pu être planifiée. Réessaie.', 'danger')
+  }
+}
+
+async function move({ date }: { date: DateKey }) {
+  const entry = moving.value
+  moving.value = null
+  if (!entry?.scheduledId) return
+  try {
+    await services.schedule.moveScheduled(entry.scheduledId, date)
+    selected.value = date
+    await load()
+    toasts.show(`${entry.title} déplacée au ${formatLongDate(date)}`, 'success')
+  } catch {
+    toasts.show('La séance n’a pas pu être déplacée. Réessaie.', 'danger')
+  }
+}
+
+/** Décalage rapide d'un jour, sans passer par le dialogue */
+async function nudge(entry: CalendarEntry, direction: -1 | 1) {
+  if (!entry.scheduledId) return
+  moving.value = entry
+  await move({ date: addDays(entry.day, direction) })
+}
+
+function requestCancel(entry: CalendarEntry) {
+  cancelling.value = entry
+  confirmingCancel.value = true
+}
+
+async function confirmCancel() {
+  const entry = cancelling.value
+  cancelling.value = null
+  if (!entry?.scheduledId) return
+  try {
+    await services.schedule.cancelScheduled(entry.scheduledId)
+    await load()
+    toasts.show(`${entry.title} annulée`)
+  } catch {
+    toasts.show('La séance n’a pas pu être annulée. Réessaie.', 'danger')
+  }
+}
+
 watch([visibleDays], load)
 
 onMounted(load)
@@ -206,6 +266,10 @@ onMounted(load)
       </ul>
 
       <BaseCard :title="formatLongDate(selected)">
+        <template #actions>
+          <BaseButton variant="secondary" @click="planning = true">Planifier</BaseButton>
+        </template>
+
         <ul v-if="dayEntries.length > 0" class="day" role="list">
           <li v-for="entry in dayEntries" :key="entry.id" class="day__item">
             <span class="day__text">
@@ -217,6 +281,17 @@ onMounted(load)
                 </template>
                 <template v-if="entry.abandoned"> · abandonnée</template>
               </span>
+            </span>
+
+            <span v-if="entry.scheduledId && entry.status !== 'done'" class="day__actions">
+              <IconButton :label="`Avancer ${entry.title} d’un jour`" @click="nudge(entry, -1)">
+                <ChevronLeft :size="20" aria-hidden="true" />
+              </IconButton>
+              <IconButton :label="`Reporter ${entry.title} d’un jour`" @click="nudge(entry, 1)">
+                <ChevronRight :size="20" aria-hidden="true" />
+              </IconButton>
+              <BaseButton variant="ghost" @click="moving = entry">Déplacer</BaseButton>
+              <BaseButton variant="ghost" @click="requestCancel(entry)">Annuler</BaseButton>
             </span>
           </li>
         </ul>
@@ -243,6 +318,30 @@ onMounted(load)
         </p>
       </BaseCard>
     </template>
+
+    <CalendarPlanDialog v-model:open="planning" :day="selected" @submit="plan" />
+
+    <CalendarPlanDialog
+      :open="moving !== null"
+      :day="moving?.day ?? selected"
+      :title="moving?.title"
+      mode="move"
+      @submit="move"
+      @update:open="moving = $event ? moving : null"
+    />
+
+    <ConfirmDialog
+      v-model:open="confirmingCancel"
+      title="Annuler cette séance planifiée ?"
+      confirm-label="Annuler la séance"
+      cancel-label="Garder"
+      danger
+      @confirm="confirmCancel"
+      @cancel="cancelling = null"
+    >
+      {{ cancelling?.title }} disparaîtra du calendrier. Les séances déjà réalisées ne sont pas
+      touchées.
+    </ConfirmDialog>
   </div>
 </template>
 
@@ -360,6 +459,13 @@ onMounted(load)
 .day__status {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+}
+
+.day__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
 }
 
 .calendar__stats {
