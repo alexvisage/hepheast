@@ -16,7 +16,8 @@
     "format": "prettier --write .",
     "lint:style": "stylelint \"src/**/*.{css,vue}\" --fix --allow-empty-input",
     "format:check": "prettier --check .",
-    "lint:check": "oxlint . && eslint . && stylelint \"src/**/*.{css,vue}\" --allow-empty-input"
+    "lint:check": "oxlint . && eslint . && stylelint \"src/**/*.{css,vue}\" --allow-empty-input",
+    "prepare": "husky"
   },
   "dependencies": {
     "pinia": "^4.0.3",

@@ -1,0 +1,5 @@
+{
+  "*.{ts,mts,vue}": ["oxlint --fix", "eslint --fix --cache", "prettier --write"],
+  "*.{css,vue}": ["stylelint --fix --allow-empty-input"],
+  "*.{json,md,html,mjs,yaml,yml}": ["prettier --write"]
+}
