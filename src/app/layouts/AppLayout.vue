@@ -5,6 +5,7 @@ import { ListChecks, User } from '@lucide/vue'
 
 import AppLogo from '@/components/AppLogo.vue'
 
+import DesktopSidebar from './DesktopSidebar.vue'
 import MobileTabBar from './MobileTabBar.vue'
 
 const route = useRoute()
@@ -15,6 +16,8 @@ const focusMode = computed(() => route.meta.focus === true)
 
 <template>
   <div class="app-layout" :class="{ 'app-layout--focus': focusMode }">
+    <DesktopSidebar class="app-layout__sidebar" />
+
     <header class="top-bar">
       <RouterLink to="/" class="top-bar__home" aria-label="HEPHAEST, tableau de bord">
         <AppLogo :size="28" />
@@ -40,6 +43,10 @@ const focusMode = computed(() => route.meta.focus === true)
 <style scoped>
 .app-layout {
   min-height: 100dvh;
+}
+
+.app-layout__sidebar {
+  display: none;
 }
 
 .top-bar {
@@ -90,5 +97,25 @@ const focusMode = computed(() => route.meta.focus === true)
 
 .app-layout--focus .app-layout__main {
   padding-bottom: var(--space-7);
+}
+
+@media (width >= 64rem) {
+  .app-layout {
+    display: grid;
+    grid-template-columns: 16rem minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .app-layout__sidebar {
+    display: flex;
+  }
+
+  .top-bar {
+    display: none;
+  }
+
+  .app-layout__main {
+    padding: var(--space-7) var(--space-7) var(--space-8);
+  }
 }
 </style>
