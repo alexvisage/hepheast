@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { CalendarDays, Dumbbell, Play, Star } from '@lucide/vue'
+import { CalendarDays, Dumbbell, History, Play, Star } from '@lucide/vue'
 
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
@@ -203,8 +203,8 @@ onMounted(() => {
           {{ formatNumber(lastTotals.volumeKg) }} kg ·
           {{ formatDuration(lastTotals.durationSeconds) }}
         </p>
-        <BaseButton :to="{ name: 'session-summary' }" variant="secondary">
-          Voir le récapitulatif
+        <BaseButton :to="{ name: 'session-detail', params: { id: last.id } }" variant="secondary">
+          Voir le détail
         </BaseButton>
       </BaseCard>
 
@@ -220,6 +220,10 @@ onMounted(() => {
         <RouterLink :to="{ name: 'calendar' }" class="shortcut">
           <CalendarDays :size="20" aria-hidden="true" />
           Calendrier
+        </RouterLink>
+        <RouterLink :to="{ name: 'history' }" class="shortcut">
+          <History :size="20" aria-hidden="true" />
+          Historique
         </RouterLink>
       </nav>
     </template>

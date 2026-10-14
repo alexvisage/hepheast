@@ -115,6 +115,6 @@ describe('DashboardView', () => {
   it('offre les raccourcis vers l’entraînement, les favoris et le calendrier', async () => {
     const wrapper = await mountDashboard(router)
     const links = wrapper.findAll('.shortcut').map((node) => node.attributes('href'))
-    expect(links).toEqual(['/entrainement', '/exercices?favoris=1', '/calendrier'])
+    expect(links).toEqual(['/entrainement', '/exercices?favoris=1', '/calendrier', '/historique'])
   })
 })
