@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+import { authGuard } from './guards'
 import { routes } from './routes'
 
 export type LayoutName = 'app' | 'auth'
@@ -24,6 +25,8 @@ export const router = createRouter({
   routes,
   scrollBehavior: (_to, _from, savedPosition) => savedPosition ?? { top: 0 },
 })
+
+router.beforeEach(authGuard)
 
 router.afterEach((to) => {
   document.title = to.meta.title ? `${to.meta.title} · ${APP_NAME}` : APP_NAME
