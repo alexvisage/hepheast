@@ -63,7 +63,9 @@ function confirmRemoval() {
         <SetRow
           :set="set"
           :index="index + 1"
+          :can-copy-previous="index > 0"
           @update="update(set, $event)"
+          @copy-previous="active.copyPreviousSet(entry.id, set.id)"
           @toggle-done="active.toggleSetDone(entry.id, set.id)"
           @toggle-skipped="toggleSkipped(set)"
           @remove="requestRemoval(set)"

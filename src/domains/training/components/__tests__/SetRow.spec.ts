@@ -97,6 +97,17 @@ describe('SetRow', () => {
     expect(wrapper.emitted('update')?.at(-1)).toEqual([{ note: undefined }])
   })
 
+  it('ne propose la copie qu’à partir de la deuxième série', async () => {
+    const first = mountRow()
+    expect(first.find('[aria-label^="Copier la série"]').exists()).toBe(false)
+
+    const second = mount(SetRow, {
+      props: { set: makeSet({ id: 'set-2' }), index: 2, canCopyPrevious: true },
+    })
+    await second.get('[aria-label="Copier la série 1 dans la série 2"]').trigger('click')
+    expect(second.emitted('copyPrevious')).toHaveLength(1)
+  })
+
   it('demande la suppression de la série', async () => {
     const wrapper = mountRow()
     await wrapper.get('[aria-label="Supprimer la série 1"]').trigger('click')

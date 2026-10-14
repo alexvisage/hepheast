@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, useId } from 'vue'
-import { Ban, Check, MessageSquare, Trash2 } from '@lucide/vue'
+import { Ban, Check, CopyPlus, MessageSquare, Trash2 } from '@lucide/vue'
 
 import IconButton from '@/components/ui/IconButton.vue'
 import NumberStepper from '@/components/ui/NumberStepper.vue'
@@ -17,10 +17,13 @@ const props = defineProps<{
   set: SetEntry
   /** Numéro affiché, de 1 à n */
   index: number
+  /** Une série précédente existe : ses valeurs peuvent être reprises */
+  canCopyPrevious?: boolean
 }>()
 
 const emit = defineEmits<{
   update: [patch: Partial<SetEntry>]
+  copyPrevious: []
   toggleDone: []
   toggleSkipped: []
   remove: []
@@ -99,6 +102,13 @@ function setNote(value: string) {
         </select>
       </label>
 
+      <IconButton
+        v-if="canCopyPrevious"
+        :label="`Copier la série ${index - 1} dans la série ${index}`"
+        @click="emit('copyPrevious')"
+      >
+        <CopyPlus :size="18" aria-hidden="true" />
+      </IconButton>
       <IconButton
         :label="`Ignorer la série ${index}`"
         :aria-pressed="skipped"
@@ -191,6 +201,7 @@ function setNote(value: string) {
 
 .set-row__meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-1);
@@ -203,7 +214,8 @@ function setNote(value: string) {
 
 .set-row__select {
   width: 100%;
-  max-width: 10rem;
+  min-width: 7rem;
+  max-width: 12rem;
   min-height: 2.25rem;
   padding: 0 var(--space-2);
   font-size: var(--font-size-sm);
