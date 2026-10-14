@@ -16,13 +16,14 @@ function backend(): Storage | null {
 
 export function readJson<T>(key: string, fallback: T): T {
   const fullKey = PREFIX + key
-  let raw: string | null | undefined
+  const storage = backend()
+  let raw: string | null
   try {
-    raw = backend()?.getItem(fullKey)
+    raw = storage ? storage.getItem(fullKey) : (memory.get(fullKey) ?? null)
   } catch {
-    raw = undefined
+    // Stockage inaccessible : on se replie sur la copie mémoire
+    raw = memory.get(fullKey) ?? null
   }
-  raw ??= memory.get(fullKey) ?? null
   if (raw === null) return fallback
   try {
     return JSON.parse(raw) as T
