@@ -1,6 +1,6 @@
 # État d'avancement
 
-Dernière mise à jour : 14/10/2026. À mettre à jour à chaque fin de session.
+Dernière mise à jour : 15/10/2026. À mettre à jour à chaque fin de session.
 
 ## Fait
 
@@ -47,31 +47,46 @@ Dernière mise à jour : 14/10/2026. À mettre à jour à chaque fin de session.
   sélecteurs d'exercice et de période, formule d'Epley affichée.
 - **Profil** (SCRUM-90) : nom affiché, unité, fuseau, premier jour de semaine, repos par défaut,
   démarrage automatique du repos, déconnexion. Validation Zod.
+- **Programmes** (SCRUM-169, 170, 172, 175, 176) : modèle `Program` / `ProgramVersion` /
+  `ProgramDay` / `ProgramExercise` avec versionnement (une version qui a servi est figée, la
+  modifier en ouvre une nouvelle), service local, trois modèles de départ (full body,
+  upper/lower, PPL), bibliothèque (créer, dupliquer, renommer, archiver, supprimer), éditeur
+  (jours, exercices, prescriptions complètes), assistant d'activation qui planifie les séances
+  au calendrier, et démarrage de séance pré-remplie depuis un jour de programme avec la
+  prescription affichée à côté du réalisé.
 - **Tests** : polyfill `<dialog>` et bouchon canvas 2D dans `src/__tests__/setup.ts` (jsdom
   n'implémente ni `showModal()` ni `getContext('2d')`, dont ECharts a besoin pour mesurer le
-  texte des axes). 227 tests.
+  texte des axes). `detach()` dans `storage.ts` pour figer ce qu'on enregistre : `structuredClone`
+  refuse les proxys de Vue. 270 tests.
 
 Stories laissées « En cours » car seule la partie front existe : SCRUM-51, 53, 96, 97, 98, 100,
-101, 102, 103, 105, 106, 107, 110, 111, 112, 116, 117.
+101, 102, 103, 105, 106, 107, 110, 111, 112, 113, 114, 115, 116, 117.
 Sous-tâches laissées « En cours » : SCRUM-137 et SCRUM-165 — le glisser-déposer reste à faire
 dans les deux cas, les alternatives clavier et tactile sont en place.
 
 ## Prochaines étapes, dans l'ordre
 
-Toutes les pages du pratiquant existent, sauf **Programmes** (phase 3). Restent les manques
-repérés en relisant les critères d'acceptation :
+**Le squelette du pratiquant est complet** : toutes les pages de la navigation existent et
+fonctionnent de bout en bout. Alexandre ajoutera ses propres tickets pour préciser la suite ;
+voilà ce qui reste identifié aujourd'hui :
 
-1. **Records personnels** : SCRUM-29 (définition) puis SCRUM-184 (badge en séance, liste, et
-   affichage dans le récapitulatif de fin de séance).
+1. **Records personnels** : SCRUM-29 (définition) puis SCRUM-184 (badge en séance, liste,
+   récapitulatif). Décision prise le 15/10 : quatre records par exercice — charge max,
+   meilleures répétitions à charge donnée, meilleur volume de séance, 1RM estimé. Calculés
+   depuis les séries, jamais stockés ; il faut battre, pas égaler.
 2. **Pause et reprise de séance** (AC de SCRUM-105) : `WorkoutStatus` prévoit `paused`, mais ni
    le store ni l'UI ne l'utilisent. Aucune sous-tâche front ne le couvre : à créer.
-3. **Programmes** (SCRUM-13, phase 3) : la page est encore vide et le modèle (`Program`,
-   `ProgramVersion`, `ProgramDay`) n'existe pas. C'est le dernier gros morceau du pratiquant.
-4. **Glisser-déposer** : exercices d'une séance (SCRUM-137) et séances du calendrier (SCRUM-165).
+3. **Glisser-déposer** : exercices d'une séance (SCRUM-137), séances du calendrier (SCRUM-165),
+   jours et exercices d'un programme (SCRUM-169). Les trois ont leur alternative clavier.
+4. **Progression de charge configurable** (CDC §6.2, AC de SCRUM-115) : aucune hausse n'est
+   proposée pour l'instant, ce qui est conforme mais minimal.
 5. **Période personnalisée** sur la progression (AC de SCRUM-117) : `listSessions` accepte déjà
    `from`/`to`, il ne manque que deux champs de date.
 6. **Pagination du catalogue** (AC de SCRUM-96) : la liste est rendue d'un bloc.
-7. **Test E2E du parcours de séance** (SCRUM-152).
+7. **Test E2E du parcours de séance** (SCRUM-152) et tests d'intégration du versionnement de
+   programme (SCRUM-173).
+
+Hors pratiquant : espace coach (CDC §7) et administration (CDC §8), phases suivantes.
 
 ## Points ouverts
 
@@ -84,11 +99,12 @@ repérés en relisant les critères d'acceptation :
   (Jira, commits, Vue, CSS, données, tests) ne sont pas écrites.
 - Les **sous-tâches Jira n'ont pas de description** ; les critères d'acceptation vivent dans les
   stories parentes. À relire avant d'attaquer une sous-tâche.
-- `UserPreferences.autoRest` ajouté au modèle pour le démarrage automatique du repos. L'écran
-  de réglage des préférences reste à faire (SCRUM-90) ; en attendant, la case est dans la barre
-  de repos.
+- `UserPreferences.autoRest` : réglable depuis le profil (SCRUM-90) **et** depuis la barre de
+  repos. Deux entrées pour la même préférence, assumé.
 - Le minuteur de repos ne survit pas à un rechargement de page (état en mémoire).
-- Page encore vide : programmes.
+- Le **back** reste entièrement à faire : l'adaptateur local tient le rôle de tous les endpoints
+  (`SCRUM-167`, `168`, `171`, `174`, `177`, `179`, `89`, `133`, `149`, `153`, `155`, `160`, `163`,
+  `164` sont encore « À faire »).
 - ECharts pèse **173 kB gzip** dans son propre lot, chargé seulement par `/progression` et
   `/design-system`. Choix assumé (SCRUM-180) ; à surveiller si d'autres écrans l'importent.
 - Les filtres de date de l'adaptateur local lisent le jour dans le fuseau du **navigateur**,
@@ -97,3 +113,5 @@ repérés en relisant les critères d'acceptation :
 - Nom du produit : HEPHAEST (CDC) ou Hepheast (Jira).
 - Compte de démo pré-rempli en dev : proposé, pas encore fait.
 - Arbitrages restants : voir `decisions.md`.
+- Push bloqué le 15/10 : `Permission to alexvisage/hepheast.git denied to AlexandreV-dev` (403).
+  Six commits de programmes sont restés en local, à pousser après rétablissement de l'accès.
