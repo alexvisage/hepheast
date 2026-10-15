@@ -58,6 +58,15 @@ export function latency(ms = 120): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, import.meta.env.MODE === 'test' ? 0 : ms))
 }
 
+/**
+ * Copie détachée de toute réactivité. `structuredClone` refuse les proxys de
+ * Vue : le passage par JSON est le moyen sûr de figer ce qu'on enregistre,
+ * et il écarte au passage les `undefined`, absents du stockage.
+ */
+export function detach<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T
+}
+
 export function createId(): string {
   return globalThis.crypto.randomUUID()
 }

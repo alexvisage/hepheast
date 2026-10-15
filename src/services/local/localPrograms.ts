@@ -3,7 +3,7 @@ import type { Program, ProgramDay, ProgramVersion } from '@/types/domain'
 import { ServiceError, type ProgramService } from '../contracts'
 
 import { findTemplate, programTemplates, templateDays } from './programTemplates'
-import { createId, latency, readJson, writeJson } from './storage'
+import { createId, detach, latency, readJson, writeJson } from './storage'
 
 /**
  * Programmes de démonstration, stockés dans le navigateur.
@@ -36,7 +36,7 @@ export function createLocalPrograms(getUserId: () => string | null): ProgramServ
       .sort((first, second) => second.createdAt.localeCompare(first.createdAt))
 
   function save(program: Program): Program {
-    const copy = structuredClone(program)
+    const copy = detach(program)
     persist([...load().filter((item) => item.id !== program.id), copy])
     return copy
   }
@@ -117,14 +117,14 @@ export function createLocalPrograms(getUserId: () => string | null): ProgramServ
           currentVersion: version,
           versions: [
             ...program.versions,
-            { version, createdAt: new Date().toISOString(), days: structuredClone(days) },
+            { version, createdAt: new Date().toISOString(), days: detach(days) },
           ],
         })
       }
       return save({
         ...program,
         versions: program.versions.map((item) =>
-          item.version === program.currentVersion ? { ...item, days: structuredClone(days) } : item,
+          item.version === program.currentVersion ? { ...item, days: detach(days) } : item,
         ),
       })
     },
@@ -136,13 +136,13 @@ export function createLocalPrograms(getUserId: () => string | null): ProgramServ
       const source = currentVersionOf(program)
       // La copie repart d'une version 1 vierge d'historique
       return save({
-        ...structuredClone(program),
+        ...detach(program),
         id: createId(),
         title: `${program.title} (copie)`,
         status: 'draft',
         createdAt: now,
         currentVersion: 1,
-        versions: [{ version: 1, createdAt: now, days: structuredClone(source?.days ?? []) }],
+        versions: [{ version: 1, createdAt: now, days: detach(source?.days ?? []) }],
         schedule: undefined,
       })
     },

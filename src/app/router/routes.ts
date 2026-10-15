@@ -57,6 +57,13 @@ export const routes: RouteRecordRaw[] = [
     meta: { title: 'Programmes' },
   },
   {
+    path: '/programmes/:id',
+    name: 'program-editor',
+    component: () => import('@/domains/programs/views/ProgramEditorView.vue'),
+    props: true,
+    meta: { title: 'Éditeur de programme' },
+  },
+  {
     path: '/progression',
     name: 'progress',
     component: () => import('@/domains/progress/views/ProgressView.vue'),
