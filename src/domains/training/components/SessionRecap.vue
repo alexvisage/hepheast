@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import BaseCard from '@/components/ui/BaseCard.vue'
+import { formatPrescription } from '@/domains/programs/prescription'
 import { formatDuration, formatNumber, formatSet } from '@/services/format'
 import type { Exercise, Id, SetKind, SetStatus, WorkoutSession } from '@/types/domain'
 
@@ -86,6 +87,10 @@ const recap = computed(() =>
             </p>
           </div>
 
+          <p v-if="detailed && item.entry.prescription" class="recap__prescription">
+            <span class="recap__planned">Prévu</span>
+            {{ formatPrescription(item.entry.prescription) }}
+          </p>
           <p v-if="detailed && item.entry.note" class="recap__note">{{ item.entry.note }}</p>
 
           <ul class="recap__sets" role="list">
@@ -200,6 +205,25 @@ const recap = computed(() =>
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+.recap__prescription {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-accent-text);
+}
+
+.recap__planned {
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-on-accent);
+  background-color: var(--color-accent);
   border-radius: var(--radius-full);
 }
 

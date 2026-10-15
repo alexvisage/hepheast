@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 import type { SyncState } from '@/components/ui/SyncStatus.vue'
+import { prescribedSets, toPrescription } from '@/domains/programs/prescription'
 import { services } from '@/services'
 import { createId } from '@/services/local/storage'
 import { useSessionStore } from '@/stores/session'
@@ -9,6 +10,8 @@ import type {
   Exercise,
   Id,
   LastPerformance,
+  Program,
+  ProgramDay,
   SetEntry,
   WorkoutExercise,
   WorkoutSession,
@@ -63,6 +66,66 @@ export const useActiveSessionStore = defineStore('active-session', () => {
     await hydrate(session.value)
     sync.value = 'saved'
     return session.value
+  }
+
+  /**
+   * Démarre la séance d'un jour de programme : exercices et séries prévues
+   * sont pré-remplis, la prescription est figée à côté de la performance
+   * (CDC §6.2). Aucune charge n'est augmentée automatiquement.
+   */
+  async function startFromProgram(program: Program, day: ProgramDay) {
+    // Une séance en cours est reprise telle quelle : on n'écrase jamais une saisie,
+    // y compris celle qui n'est pas encore partie en sauvegarde
+    if (session.value) return session.value
+
+    const started = await start(day.name)
+    if (started.exercises.length > 0) return started
+
+    started.programId = program.id
+    started.programVersion = program.currentVersion
+    started.programDayId = day.id
+
+    const unit = useSessionStore().preferences?.unit ?? 'kg'
+    for (const prescribed of day.exercises) {
+      await loadExerciseContext(prescribed.exerciseId)
+      const prescription = toPrescription(prescribed)
+      started.exercises.push({
+        id: createId(),
+        exerciseId: prescribed.exerciseId,
+        prescription,
+        sets: prescribedSets(prescription, createId, unit),
+      })
+    }
+
+    // La version devient intouchable : les prochaines modifications en créeront une autre
+    await services.programs.markVersionUsed(program.id, program.currentVersion)
+    scheduleSave()
+    return started
+  }
+
+  /**
+   * Démarre une séance planifiée, en reprenant son jour de programme quand
+   * elle en vient, et la rattache à son créneau.
+   */
+  async function startFromScheduled(scheduled: {
+    id: Id
+    title: string
+    programId?: Id
+    programDayId?: Id
+  }) {
+    let started: WorkoutSession | null = null
+
+    if (scheduled.programId && scheduled.programDayId) {
+      const program = await services.programs.getProgram(scheduled.programId)
+      const day = program.versions
+        .find((version) => version.version === program.currentVersion)
+        ?.days.find((item) => item.id === scheduled.programDayId)
+      if (day) started = await startFromProgram(program, day)
+    }
+
+    started ??= await start(scheduled.title)
+    await services.schedule.linkSession(scheduled.id, started.id)
+    return started
   }
 
   // --- Sauvegarde --------------------------------------------------------
@@ -255,6 +318,8 @@ export const useActiveSessionStore = defineStore('active-session', () => {
     hasSession,
     load,
     start,
+    startFromProgram,
+    startFromScheduled,
     flush,
     addExercise,
     removeExercise,

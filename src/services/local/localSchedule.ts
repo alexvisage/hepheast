@@ -47,7 +47,7 @@ export function createLocalSchedule(getUserId: () => string | null): ScheduleSer
       return mine().find((item) => item.date >= from && item.status !== 'done') ?? null
     },
 
-    async createScheduled({ date, title, programId }) {
+    async createScheduled({ date, title, programId, programDayId }) {
       await latency()
       const scheduled: ScheduledWorkout = {
         id: createId(),
@@ -56,6 +56,7 @@ export function createLocalSchedule(getUserId: () => string | null): ScheduleSer
         title,
         status: 'planned',
         ...(programId ? { programId } : {}),
+        ...(programDayId ? { programDayId } : {}),
       }
       persist([...load(), scheduled])
       return scheduled

@@ -160,8 +160,16 @@ async function start(entry: CalendarEntry) {
     return
   }
   try {
-    const started = await active.start(entry.title)
-    if (entry.scheduledId) await services.schedule.linkSession(entry.scheduledId, started.id)
+    if (entry.scheduledId) {
+      await active.startFromScheduled({
+        id: entry.scheduledId,
+        title: entry.title,
+        ...(entry.programId ? { programId: entry.programId } : {}),
+        ...(entry.programDayId ? { programDayId: entry.programDayId } : {}),
+      })
+    } else {
+      await active.start(entry.title)
+    }
     await router.push({ name: 'active-session' })
   } catch {
     toasts.show('La séance n’a pas pu être démarrée. Réessaie.', 'danger')

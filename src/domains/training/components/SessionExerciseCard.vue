@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { ArrowDown, ArrowUp, Trash2 } from '@lucide/vue'
 
 import IconButton from '@/components/ui/IconButton.vue'
+import { formatPrescription } from '@/domains/programs/prescription'
 import { formatSet, formatShortDate } from '@/services/format'
 import type { Exercise, LastPerformance, WorkoutExercise } from '@/types/domain'
 
@@ -57,6 +58,14 @@ const lastLine = computed(() => {
       </div>
     </header>
 
+    <p v-if="entry.prescription" class="session-exercise__prescription">
+      <span class="session-exercise__tag">Prévu</span>
+      {{ formatPrescription(entry.prescription) }}
+    </p>
+    <p v-if="entry.prescription?.note" class="session-exercise__consigne text-muted">
+      {{ entry.prescription.note }}
+    </p>
+
     <p v-if="lastLine" class="session-exercise__last text-muted">
       <span class="visually-hidden">Dernière fois : </span>{{ lastLine }}
     </p>
@@ -92,8 +101,27 @@ const lastLine = computed(() => {
 }
 
 .session-exercise__rank,
-.session-exercise__last {
+.session-exercise__last,
+.session-exercise__prescription,
+.session-exercise__consigne {
   font-size: var(--font-size-sm);
+}
+
+.session-exercise__prescription {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-accent-text);
+}
+
+.session-exercise__tag {
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-on-accent);
+  background-color: var(--color-accent);
+  border-radius: var(--radius-full);
 }
 
 .session-exercise__actions {

@@ -64,8 +64,7 @@ async function load() {
 async function startScheduled(scheduled: ScheduledWorkout) {
   starting.value = true
   try {
-    const started = await active.start(scheduled.title)
-    await services.schedule.linkSession(scheduled.id, started.id)
+    await active.startFromScheduled(scheduled)
     await router.push({ name: 'active-session' })
   } catch {
     toasts.show('La séance n’a pas pu être démarrée. Réessaie.', 'danger')

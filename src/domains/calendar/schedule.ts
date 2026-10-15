@@ -27,6 +27,9 @@ export interface CalendarEntry {
   status: CalendarStatus
   scheduledId?: Id
   sessionId?: Id
+  /** Jour de programme à reprendre au démarrage */
+  programId?: Id
+  programDayId?: Id
   movedFrom?: DateKey
   /** Séance achevée mais abandonnée : à distinguer d'une séance réussie */
   abandoned?: boolean
@@ -76,6 +79,8 @@ export function buildCalendar({
       status: entryStatus(item, today),
       scheduledId: item.id,
       ...(item.sessionId ? { sessionId: item.sessionId } : {}),
+      ...(item.programId ? { programId: item.programId } : {}),
+      ...(item.programDayId ? { programDayId: item.programDayId } : {}),
       ...(item.movedFrom ? { movedFrom: item.movedFrom } : {}),
     })
   }
