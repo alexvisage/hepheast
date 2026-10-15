@@ -6,6 +6,10 @@ import type {
   LastPerformance,
   MovementType,
   MuscleGroup,
+  Program,
+  ProgramDay,
+  ProgramSchedule,
+  ProgramStatus,
   ScheduledWorkout,
   UserPreferences,
   UserProfile,
@@ -99,7 +103,12 @@ export interface ScheduleService {
   listScheduled(range: { from: DayKey; to: DayKey }): Promise<ScheduledWorkout[]>
   /** Prochaine séance planifiée à partir de ce jour, celle du jour comprise */
   getNextScheduled(from: DayKey): Promise<ScheduledWorkout | null>
-  createScheduled(input: { date: DayKey; title: string; programId?: Id }): Promise<ScheduledWorkout>
+  createScheduled(input: {
+    date: DayKey
+    title: string
+    programId?: Id
+    programDayId?: Id
+  }): Promise<ScheduledWorkout>
   /** Déplacement : le jour d'origine est conservé pour l'affichage */
   moveScheduled(id: Id, date: DayKey): Promise<ScheduledWorkout>
   cancelScheduled(id: Id): Promise<void>
@@ -107,9 +116,45 @@ export interface ScheduleService {
   linkSession(id: Id, sessionId: Id): Promise<ScheduledWorkout>
 }
 
+/** Modèle de départ proposé à la création d'un programme (CDC §6.1) */
+export interface ProgramTemplateSummary {
+  id: string
+  title: string
+  description: string
+  weekdays: number[]
+  dayCount: number
+}
+
+/** Programmes d'entraînement (CDC §6) */
+export interface ProgramService {
+  listPrograms(options?: { includeArchived?: boolean }): Promise<Program[]>
+  getProgram(id: Id): Promise<Program>
+  listTemplates(): Promise<ProgramTemplateSummary[]>
+  /** Depuis zéro, ou depuis un modèle */
+  createProgram(input: {
+    title: string
+    description?: string
+    templateId?: string
+  }): Promise<Program>
+  renameProgram(id: Id, patch: { title: string; description?: string }): Promise<Program>
+  /**
+   * Enregistre les jours. Si la version courante a déjà servi à une séance,
+   * une nouvelle version est créée : les séances passées gardent la leur.
+   */
+  saveDays(id: Id, days: ProgramDay[]): Promise<Program>
+  duplicateProgram(id: Id): Promise<Program>
+  setStatus(id: Id, status: ProgramStatus): Promise<Program>
+  /** Programme actif : date de début et jours d'entraînement */
+  setSchedule(id: Id, schedule: ProgramSchedule): Promise<Program>
+  /** Fige la version courante : la prochaine modification en créera une autre */
+  markVersionUsed(id: Id, version: number): Promise<Program>
+  deleteProgram(id: Id): Promise<void>
+}
+
 export interface Services {
   auth: AuthService
   exercises: ExerciseCatalogService
   workouts: WorkoutService
   schedule: ScheduleService
+  programs: ProgramService
 }

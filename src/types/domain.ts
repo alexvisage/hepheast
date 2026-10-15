@@ -50,10 +50,23 @@ export interface SetEntry {
   completedAt?: IsoDateTime
 }
 
+/** Prescription reprise du programme au démarrage, pour distinguer prévu et réalisé */
+export interface Prescription {
+  sets: number
+  reps: number
+  targetLoad?: number
+  unit?: WeightUnit
+  restSeconds?: number
+  tempo?: string
+  note?: string
+}
+
 export interface WorkoutExercise {
   id: Id
   exerciseId: Id
   note?: string
+  /** Ce que le programme prévoyait ; la performance reste dans `sets` */
+  prescription?: Prescription
   sets: SetEntry[]
 }
 
@@ -75,6 +88,8 @@ export interface ScheduledWorkout {
   title: string
   status: ScheduledStatus
   programId?: Id
+  /** Jour du programme à reprendre au démarrage */
+  programDayId?: Id
   /** Séance réalisée qui l'honore */
   sessionId?: Id
   /** Jour d'origine quand la séance a été déplacée */
@@ -87,12 +102,73 @@ export interface WorkoutSession {
   userId: Id
   title: string
   status: WorkoutStatus
+  /** Programme et version suivis, figés au démarrage (CDC §6.3) */
+  programId?: Id
+  programVersion?: number
+  programDayId?: Id
   startedAt: IsoDateTime
   endedAt?: IsoDateTime
   note?: string
   /** Ressenti facultatif de 1 (très facile) à 5 (épuisant) */
   feeling?: 1 | 2 | 3 | 4 | 5
   exercises: WorkoutExercise[]
+}
+
+// --- Programmes (CDC §6, §11) --------------------------------------------
+
+export type ProgramStatus = 'draft' | 'active' | 'archived'
+
+export interface ProgramExercise {
+  id: Id
+  exerciseId: Id
+  /** Séries prescrites */
+  sets: number
+  /** Répétitions cibles par série */
+  reps: number
+  restSeconds?: number
+  /** Charge cible facultative, avec son unité */
+  targetLoad?: number
+  unit?: WeightUnit
+  tempo?: string
+  note?: string
+}
+
+export interface ProgramDay {
+  id: Id
+  name: string
+  exercises: ProgramExercise[]
+}
+
+/**
+ * Une version figée du contenu d'un programme. Modifier un programme déjà
+ * utilisé crée une nouvelle version : les séances passées gardent la leur.
+ */
+export interface ProgramVersion {
+  version: number
+  createdAt: IsoDateTime
+  /** Horodatage de la première séance démarrée sur cette version */
+  usedAt?: IsoDateTime
+  days: ProgramDay[]
+}
+
+export interface ProgramSchedule {
+  startDate: DayKey
+  /** Jours d'entraînement, 0 = dimanche … 6 = samedi */
+  weekdays: number[]
+}
+
+export interface Program {
+  id: Id
+  userId: Id
+  title: string
+  description?: string
+  status: ProgramStatus
+  createdAt: IsoDateTime
+  /** Numéro de la version en cours de modification */
+  currentVersion: number
+  versions: ProgramVersion[]
+  /** Renseigné à l'activation */
+  schedule?: ProgramSchedule
 }
 
 export interface UserProfile {

@@ -1,6 +1,7 @@
 import type { Services } from './contracts'
 import { createLocalAuth } from './local/localAuth'
 import { createLocalExerciseCatalog } from './local/localExercises'
+import { createLocalPrograms } from './local/localPrograms'
 import { createLocalSchedule } from './local/localSchedule'
 import { createLocalWorkouts } from './local/localWorkouts'
 
@@ -15,6 +16,7 @@ function createServices(): Services {
     exercises: createLocalExerciseCatalog(),
     workouts: createLocalWorkouts(() => auth.currentUserId()),
     schedule: createLocalSchedule(() => auth.currentUserId()),
+    programs: createLocalPrograms(() => auth.currentUserId()),
   }
 }
 
