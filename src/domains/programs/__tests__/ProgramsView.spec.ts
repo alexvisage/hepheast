@@ -137,6 +137,44 @@ describe('ProgramsView', () => {
     await vi.waitFor(() => expect(titles(wrapper)[0]).toContain('Brouillon'))
   })
 
+  it('active un programme et planifie ses séances au calendrier', async () => {
+    const program = await services.programs.createProgram({
+      title: 'Plan',
+      templateId: 'full-body',
+    })
+    const wrapper = await mountPrograms(router)
+
+    await button(wrapper, 'Activer')!.trigger('click')
+    await openDialog(wrapper).get('input[type="date"]').setValue('2026-10-19')
+    // Lundi, mercredi, vendredi sur quatre semaines : douze séances
+    await vi.waitFor(() =>
+      expect(openDialog(wrapper).text()).toContain('12 séances planifiées, du 19 oct. au 13 nov.'),
+    )
+    await dialogButton(wrapper, 'Activer').trigger('click')
+
+    await vi.waitFor(async () => {
+      const scheduled = await services.schedule.listScheduled({
+        from: '2026-10-01',
+        to: '2026-12-01',
+      })
+      expect(scheduled).toHaveLength(12)
+      expect(scheduled[0]).toMatchObject({
+        date: '2026-10-19',
+        title: 'Séance A',
+        programId: program.id,
+      })
+      expect(scheduled[1]?.title).toBe('Séance B')
+    })
+    await vi.waitFor(() => expect(titles(wrapper)[0]).toContain('Actif'))
+    expect(wrapper.text()).toContain('Démarré le 19 oct., les Lun., Mer., Ven.')
+  })
+
+  it('n’active pas un programme sans jour', async () => {
+    await services.programs.createProgram({ title: 'Vide' })
+    const wrapper = await mountPrograms(router)
+    expect(button(wrapper, 'Activer')!.attributes('disabled')).toBeDefined()
+  })
+
   it('supprime un programme après confirmation, en conseillant l’archivage', async () => {
     await services.programs.createProgram({ title: 'Plan' })
     const wrapper = await mountPrograms(router)

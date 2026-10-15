@@ -7,11 +7,14 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import StateView from '@/components/ui/StateView.vue'
 import { services, type ProgramTemplateSummary } from '@/services'
+import { formatDayMonth } from '@/services/dates'
 import { formatShortDate } from '@/services/format'
 import { useSessionStore } from '@/stores/session'
 import { useToastStore } from '@/stores/toasts'
 import type { Program, ProgramStatus } from '@/types/domain'
 
+import { planProgram, WEEKDAY_LABELS, type ActivationInput } from '../activation'
+import ProgramActivationDialog from '../components/ProgramActivationDialog.vue'
 import ProgramFormDialog from '../components/ProgramFormDialog.vue'
 
 /**
@@ -37,6 +40,7 @@ const includeArchived = ref(false)
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 
 const creating = ref(false)
+const activating = ref<Program | null>(null)
 const renaming = ref<Program | null>(null)
 const deleting = ref<Program | null>(null)
 const confirmingDelete = ref(false)
@@ -46,6 +50,11 @@ const visible = computed(() =>
     ? programs.value
     : programs.value.filter((program) => program.status !== 'archived'),
 )
+
+/** « Lun., Mer., Ven. » */
+function weekdayLabels(days: number[]): string {
+  return days.map((day) => WEEKDAY_LABELS[day]).join(', ')
+}
 
 function dayCount(program: Program): number {
   return (
@@ -120,6 +129,43 @@ async function setStatus(program: Program, next: ProgramStatus) {
     toasts.show(next === 'archived' ? `${program.title} archivé` : `${program.title} restauré`)
   } catch {
     toasts.show('Le statut n’a pas pu être changé. Réessaie.', 'danger')
+  }
+}
+
+/**
+ * Planifie les séances du programme au calendrier (CDC §6.2). Les créneaux
+ * portent le programme et le jour : démarrer depuis le calendrier reprendra
+ * la prescription.
+ */
+async function activate(input: ActivationInput) {
+  const program = activating.value
+  activating.value = null
+  if (!program) return
+  const days =
+    program.versions.find((version) => version.version === program.currentVersion)?.days ?? []
+  try {
+    await services.programs.setSchedule(program.id, {
+      startDate: input.startDate,
+      weekdays: input.weekdays,
+    })
+    const planned = planProgram(days, input)
+    for (const session of planned) {
+      await services.schedule.createScheduled({
+        date: session.date,
+        title: session.title,
+        programId: program.id,
+        programDayId: session.dayId,
+      })
+    }
+    await load()
+    toasts.show(
+      `${planned.length} séance${planned.length > 1 ? 's' : ''} planifiée${
+        planned.length > 1 ? 's' : ''
+      }`,
+      'success',
+    )
+  } catch {
+    toasts.show('Le programme n’a pas pu être activé. Réessaie.', 'danger')
   }
 }
 
@@ -201,16 +247,30 @@ onMounted(load)
             {{ program.currentVersion }} · créé le
             {{ formatShortDate(program.createdAt, session.preferences?.timeZone) }}
           </p>
+          <p v-if="program.schedule" class="program__meta text-muted">
+            Démarré le {{ formatDayMonth(program.schedule.startDate) }}, les
+            {{ weekdayLabels(program.schedule.weekdays) }}
+          </p>
           <p v-if="program.description" class="program__description text-muted">
             {{ program.description }}
           </p>
         </div>
 
         <div class="program__actions">
-          <BaseButton :to="{ name: 'program-editor', params: { id: program.id } }">
+          <BaseButton
+            v-if="program.status !== 'archived'"
+            :disabled="dayCount(program) === 0"
+            @click="activating = program"
+          >
+            {{ program.status === 'active' ? 'Replanifier' : 'Activer' }}
+          </BaseButton>
+          <BaseButton
+            variant="secondary"
+            :to="{ name: 'program-editor', params: { id: program.id } }"
+          >
             Modifier
           </BaseButton>
-          <BaseButton variant="secondary" @click="duplicate(program)">Dupliquer</BaseButton>
+          <BaseButton variant="ghost" @click="duplicate(program)">Dupliquer</BaseButton>
           <BaseButton variant="ghost" @click="renaming = program">Renommer</BaseButton>
           <BaseButton
             v-if="program.status === 'archived'"
@@ -228,6 +288,13 @@ onMounted(load)
     </template>
 
     <ProgramFormDialog v-model:open="creating" :templates="templates" @submit="create" />
+
+    <ProgramActivationDialog
+      :open="activating !== null"
+      :program="activating"
+      @submit="activate"
+      @update:open="activating = $event ? activating : null"
+    />
 
     <ProgramFormDialog
       :open="renaming !== null"
