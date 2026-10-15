@@ -53,6 +53,23 @@ export function removeKey(key: string): void {
   }
 }
 
+/**
+ * Efface toutes les données locales de l'application. Réservé aux outils de
+ * développement (jeu de démonstration) : rien dans l'UI ne doit l'appeler.
+ */
+export function clearAll(): void {
+  const storage = backend()
+  try {
+    const keys = storage ? Object.keys(storage).filter((key) => key.startsWith(PREFIX)) : []
+    for (const key of keys) storage?.removeItem(key)
+  } catch {
+    // Stockage inaccessible : la copie mémoire suffit
+  }
+  for (const key of memory.keys()) {
+    if (key.startsWith(PREFIX)) memory.delete(key)
+  }
+}
+
 /** Simule une latence réseau pour exercer les états de chargement */
 export function latency(ms = 120): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, import.meta.env.MODE === 'test' ? 0 : ms))

@@ -54,10 +54,15 @@ Dernière mise à jour : 15/10/2026. À mettre à jour à chaque fin de session.
   (jours, exercices, prescriptions complètes), assistant d'activation qui planifie les séances
   au calendrier, et démarrage de séance pré-remplie depuis un jour de programme avec la
   prescription affichée à côté du réalisé.
+- **Compte de démonstration** (dev) : bouton « Remplir un compte de démonstration » sur l'écran
+  de connexion, visible seulement en développement. `services/local/demoSeed.ts` reconstruit un
+  mois vécu — programme upper/lower actif, 16 séances réalisées avec progression de charge,
+  2 manquées, 1 abandonnée, séances à venir, favoris — puis connecte le compte
+  `demo@hephaest.app` / `demonstration1`. **Efface les données locales** à chaque appel.
 - **Tests** : polyfill `<dialog>` et bouchon canvas 2D dans `src/__tests__/setup.ts` (jsdom
   n'implémente ni `showModal()` ni `getContext('2d')`, dont ECharts a besoin pour mesurer le
   texte des axes). `detach()` dans `storage.ts` pour figer ce qu'on enregistre : `structuredClone`
-  refuse les proxys de Vue. 270 tests.
+  refuse les proxys de Vue. 279 tests.
 
 Stories laissées « En cours » car seule la partie front existe : SCRUM-51, 53, 96, 97, 98, 100,
 101, 102, 103, 105, 106, 107, 110, 111, 112, 113, 114, 115, 116, 117.
@@ -111,7 +116,6 @@ Hors pratiquant : espace coach (CDC §7) et administration (CDC §8), phases sui
   pas dans la préférence enregistrée. Sans effet en pratique (ce sont les mêmes), à corriger
   côté Supabase.
 - Nom du produit : HEPHAEST (CDC) ou Hepheast (Jira).
-- Compte de démo pré-rempli en dev : proposé, pas encore fait.
 - Arbitrages restants : voir `decisions.md`.
 - Push bloqué le 15/10 : `Permission to alexvisage/hepheast.git denied to AlexandreV-dev` (403).
   Six commits de programmes sont restés en local, à pousser après rétablissement de l'accès.

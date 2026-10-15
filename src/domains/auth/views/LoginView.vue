@@ -8,10 +8,12 @@ import { safeRedirect } from '@/app/router/guards'
 import { ServiceError } from '@/services'
 import { validate, type FieldErrors } from '@/services/validation'
 import { useSessionStore } from '@/stores/session'
+import { useToastStore } from '@/stores/toasts'
 
 import { loginSchema, type LoginInput } from '../schemas'
 
 const session = useSessionStore()
+const toasts = useToastStore()
 const router = useRouter()
 const route = useRoute()
 
@@ -19,6 +21,34 @@ const form = reactive<LoginInput>({ email: '', password: '' })
 const errors = ref<FieldErrors<LoginInput>>({})
 const formError = ref('')
 const submitting = ref(false)
+const seeding = ref(false)
+
+/** Outil de développement : le jeu de démonstration n'existe pas en production */
+const isDev = import.meta.env.DEV
+
+/**
+ * Remplit un compte de démonstration — un mois d'entraînement — puis s'y
+ * connecte. Le module est chargé à la demande : il reste hors du bundle de
+ * production.
+ */
+async function fillDemo() {
+  formError.value = ''
+  seeding.value = true
+  try {
+    const { seedDemoAccount } = await import('@/services/local/demoSeed')
+    const demo = await seedDemoAccount()
+    await session.signIn(demo.email, demo.password)
+    await router.replace({ name: 'dashboard' })
+    toasts.show(
+      `${demo.completed} séances enregistrées, ${demo.missed} manquées, ${demo.planned} à venir`,
+      'success',
+    )
+  } catch {
+    formError.value = 'Le jeu de démonstration n’a pas pu être créé.'
+  } finally {
+    seeding.value = false
+  }
+}
 
 async function submit() {
   formError.value = ''
@@ -75,6 +105,17 @@ async function submit() {
       Pas encore de compte ?
       <RouterLink :to="{ name: 'register', query: route.query }">Créer un compte</RouterLink>
     </p>
+
+    <section v-if="isDev" class="demo">
+      <h2 class="demo__title">Développement</h2>
+      <BaseButton variant="secondary" block :loading="seeding" @click="fillDemo">
+        Remplir un compte de démonstration
+      </BaseButton>
+      <p class="demo__hint">
+        Un mois d’entraînement : programme actif, séances réalisées, manquées, une abandonnée et des
+        séances à venir. <strong>Efface les données locales.</strong>
+      </p>
+    </section>
   </div>
 </template>
 
@@ -107,6 +148,28 @@ async function submit() {
 
 .auth-form__switch {
   font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.demo__title {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.demo__hint {
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }
 </style>
