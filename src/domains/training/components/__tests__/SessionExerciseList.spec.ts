@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 
@@ -33,6 +33,11 @@ describe('SessionExerciseList', () => {
   beforeEach(() => {
     localStorage.clear()
     setActivePinia(createPinia())
+  })
+
+  // Coupe la sauvegarde différée : sinon elle repersiste la séance pendant le test suivant
+  afterEach(() => {
+    useActiveSessionStore().reset()
   })
 
   it('affiche les exercices dans l’ordre de la séance', async () => {

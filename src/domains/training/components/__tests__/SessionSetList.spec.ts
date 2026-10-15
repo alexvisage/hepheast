@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 
@@ -50,6 +50,11 @@ describe('saisie des séries', () => {
   beforeEach(() => {
     localStorage.clear()
     setActivePinia(createPinia())
+  })
+
+  // Coupe la sauvegarde différée : sinon elle repersiste la séance pendant le test suivant
+  afterEach(() => {
+    useActiveSessionStore().reset()
   })
 
   it('enregistre répétitions et charge décimale dans la séance', async () => {

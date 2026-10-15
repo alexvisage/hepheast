@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
 import { services } from '@/services'
@@ -59,6 +59,11 @@ describe('séance démarrée depuis un programme', () => {
     localStorage.clear()
     setActivePinia(createPinia())
     signIn()
+  })
+
+  // Coupe la sauvegarde différée : sinon elle repersiste la séance pendant le test suivant
+  afterEach(() => {
+    useActiveSessionStore().reset()
   })
 
   it('pré-remplit les exercices et les séries prévues', async () => {

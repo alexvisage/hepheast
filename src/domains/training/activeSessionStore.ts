@@ -331,5 +331,6 @@ export const useActiveSessionStore = defineStore('active-session', () => {
     removeSet,
     finish,
     abandon,
+    reset,
   }
 })
